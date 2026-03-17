@@ -17,7 +17,7 @@ type PastService = {
 const pastServices: PastService[] = [
   {
     name: "Splash",
-    description: "국내 수상레저 통합 예약관리 플랫폼. 2024.12 종료",
+    description: "국내 수상레저 통합 예약관리 플랫폼. 2024년 4월부터 12월까지 운영되었으며, 많은 가족들에게 사랑을 받았습니다.",
     endedAt: "2024.12 종료",
     image: SplashImg,
   },
