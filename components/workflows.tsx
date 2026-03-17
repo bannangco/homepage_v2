@@ -13,12 +13,8 @@ export default function Workflows() {
               현재 운영 서비스
             </h2>
             <p className="text-lg text-indigo-200/65">
-              현재 공개 운영 중인 서비스는 준비 중입니다.
+              현재 운영 중인 서비스가 업데이트될 예정입니다.
             </p>
-          </div>
-
-          <div className="mx-auto max-w-md rounded-2xl border border-indigo-200/20 bg-gray-900/60 p-8 text-center">
-            <p className="text-base text-indigo-200/75">새로운 서비스 업데이트 예정</p>
           </div>
         </div>
       </div>
