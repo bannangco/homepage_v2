@@ -9,9 +9,9 @@ export default function Home() {
     <>
       <Hero />
       <Features />
+      <Announcements />
       <Workflows />
       <PastServices />
-      <Announcements />
     </>
   );
 }
