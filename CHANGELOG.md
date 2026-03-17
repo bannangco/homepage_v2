@@ -1,51 +1,11 @@
-# CHANGELOG.md
+# Changelog
 
-## [4.1.0] - 2024-12-08
+이 문서는 Bannangco Homepage v2의 주요 변경 사항을 기록합니다.
 
-- Update dependencies + Upgrade to Next.js 15
+## [Unreleased]
 
-## [4.0.0] - 2024-09-11
-
-Redesign the entire template
-
-## [3.3.0] - 2023-12-08
-
-Update to Next.js 14
-Update dependencies
-
-## [3.2.2] - 2023-10-04
-
-Update Twitter icon
-Update dependencies
-
-## [3.2.0] - 2023-05-31
-
-Update dependencies and fix some issues
-
-## [3.1.0] - 2023-05-07
-
-Modal video improvements
-
-## [3.0.0] - 2023-04-12
-
-Conversion to Next.js
-
-## [2.0.3] - 2023-03-28
-
-Fix video
-
-## [2.0.2] - 2023-03-28
-
-Add self-hosted video
-
-## [2.0.1] - 2023-02-16
-
-Remove header links
-
-## [2.0.0] - 2023-02-16
-
-Replace Cruip CSS with Tailwind CSS
-
-## [1.0.0] - 2020-04-07
-
-First release
+- README를 Bannangco 프로젝트 기준(설명/로컬 실행/오라클 서버 배포/환경변수/디렉토리 구조)으로 전면 개편
+- 패키지명을 `bannangco-homepage-v2`로 변경
+- 루트 레이아웃 메타데이터를 Bannangco 브랜드 문구로 통일하고 중복 메타 정의 정리
+- 로고 컴포넌트의 접근성 라벨 및 이미지 alt를 Bannangco 기준으로 수정
+- 인증 관련 페이지(signin/signup/reset-password)의 Open PRO 문구 및 영문 플레이스홀더 제거/국문화
