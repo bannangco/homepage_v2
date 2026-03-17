@@ -1,100 +1,163 @@
-# Free React / Next.js landing page template
+# Bannangco Homepage v2
 
-![Open React / Next.js template preview](https://github.com/user-attachments/assets/522a5e46-2a0e-48ca-80eb-87c7fa58f3ea)
+Bannangco(반낭코) 공식 홈페이지 프로젝트입니다.  
+Next.js(App Router) 기반으로 제작되었으며, 회사 소개/주요 서비스/공지사항 화면을 제공합니다.
 
-**Open** is a **free React / Next.js landing page template built with Tailwind CSS** for developers/makers who want to create a quick and professional landing page for their open source projects, SaaS products, online services, and more.
+## 프로젝트 개요
 
-Use it for whatever you want, and be sure to reach us out on [Twitter](https://twitter.com/Cruip_com) if you build anything cool/useful with it.
+- **프로젝트명**: Bannangco Homepage v2
+- **목적**: 반낭코 브랜드/비전/서비스 및 공지사항을 웹으로 제공
+- **기술 스택**: Next.js 15, React 19, TypeScript, Tailwind CSS, Firebase
+- **기본 도메인**: `https://bannangco.com`
 
-Created and maintained with ❤️ by [Cruip.com](https://cruip.com).
+## 로컬 실행 방법
 
-_Version 1.0.0 built with the Cruip CSS is available [here](https://github.com/cruip/open-react-template/releases/tag/1.0.0)._
-_Version 2.0.3 built with Tailwind CSS and React + Vite is available [here](https://github.com/cruip/open-react-template/releases/tag/2.0.3)._
-_Version 3.3.0 (before redesign) built with Tailwind CSS and Next.js is available [here](https://github.com/cruip/open-react-template/releases/tag/3.3.0)._
+### 1) 요구 사항
 
-## Live demo
+- Node.js 20 이상 권장
+- npm 10 이상 권장
 
-Check the live demo here 👉️ [https://open.cruip.com/](https://open.cruip.com/)
+### 2) 의존성 설치
 
-## Open PRO
+```bash
+npm install
+```
 
-[![Open Pro](https://github.com/user-attachments/assets/2062c728-95f1-4d59-aa2d-d63556f625d5)](https://cruip.com/)
+### 3) 환경변수 설정
 
-## Design files
+루트에 `.env.local` 파일을 생성하고 아래 값을 설정합니다.
 
-If you need the design files, you can download them from Figma's Community 👉 https://bit.ly/401KSUS
+```bash
+# Firebase Client SDK
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
 
-## Usage
+# Firebase Admin SDK
+FIREBASE_ADMIN_PROJECT_ID=
+FIREBASE_ADMIN_CLIENT_EMAIL=
+FIREBASE_ADMIN_PRIVATE_KEY=
 
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Optional
+NEXT_PUBLIC_SITE_URL=https://bannangco.com
+```
 
-### Getting Started
+> `FIREBASE_ADMIN_PRIVATE_KEY`는 줄바꿈을 포함할 수 있으므로 배포 환경에서 이스케이프(`\\n`) 처리 여부를 확인하세요.
 
-First, run the development server:
+### 4) 개발 서버 실행
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+브라우저에서 `http://localhost:3000`으로 접속합니다.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 배포 가이드 (오라클 서버 기준)
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+아래 절차는 Oracle Cloud Infrastructure(OCI) Ubuntu 서버를 기준으로 합니다.
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+### 1) 서버 준비
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+```bash
+sudo apt update && sudo apt upgrade -y
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs git
+node -v
+npm -v
+```
 
-### Learn More
+### 2) 애플리케이션 배포
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+git clone <REPOSITORY_URL> bannangco-homepage-v2
+cd bannangco-homepage-v2
+npm ci
+npm run build
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 3) 프로세스 매니저(PM2) 실행
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+```bash
+sudo npm install -g pm2
+pm2 start npm --name bannangco-homepage-v2 -- start
+pm2 save
+pm2 startup
+```
 
-### Deploy on Vercel
+### 4) Nginx 리버스 프록시
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+`/etc/nginx/sites-available/bannangco.com`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+```nginx
+server {
+    listen 80;
+    server_name bannangco.com www.bannangco.com;
 
-### Support notes
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
 
-This template has been developed with the App Router (`app`) and React Server Components. If you’re unfamiliar with these beta features, you can find more information about them on the Next.js beta documentation page. So, please note that any request dealing with React (e.g. extra features, customisations, et cetera) is to be considered out of the support scope.
+적용:
 
-For more information about what support covers, please see our (FAQs)[https://cruip.com/faq/].
+```bash
+sudo ln -s /etc/nginx/sites-available/bannangco.com /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl restart nginx
+```
 
-## Credits
+### 5) HTTPS 인증서(선택, 권장)
 
-- [Nucleo](https://nucleoapp.com/)
+```bash
+sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d bannangco.com -d www.bannangco.com
+```
 
-## Terms and License
+## 환경변수 목록
 
-- Released under the [GPL](https://www.gnu.org/licenses/gpl-3.0.html).
-- Copyright 2024 [Cruip](https://cruip.com/).
-- Use it for personal and commercial projects, but please don’t republish, redistribute, or resell the template.
-- Attribution is not required, although it is really appreciated.
+| 이름 | 설명 |
+| --- | --- |
+| `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase 클라이언트 API 키 |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase 인증 도메인 |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Firebase 프로젝트 ID |
+| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Firebase 스토리지 버킷 |
+| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase 메시징 발신자 ID |
+| `NEXT_PUBLIC_FIREBASE_APP_ID` | Firebase 앱 ID |
+| `FIREBASE_ADMIN_PROJECT_ID` | Firebase Admin 프로젝트 ID |
+| `FIREBASE_ADMIN_CLIENT_EMAIL` | Firebase Admin 클라이언트 이메일 |
+| `FIREBASE_ADMIN_PRIVATE_KEY` | Firebase Admin 개인 키 |
+| `NEXT_PUBLIC_SITE_URL` | 사이트 기본 URL(선택) |
 
-## About Us
+## 디렉토리 구조
 
-We're an Italian developer/designer duo creating high-quality design/code resources for developers, makers, and startups.
+```text
+.
+├── app/                        # App Router 엔트리
+│   ├── (default)/              # 메인 랜딩 페이지
+│   ├── announcements/          # 공지사항 페이지/생성 화면
+│   ├── css/                    # 글로벌/추가 스타일
+│   └── layout.tsx              # 루트 레이아웃 및 메타데이터
+├── components/                 # UI/섹션 컴포넌트
+├── lib/                        # 유틸리티 및 공통 로직
+├── public/                     # 정적 파일(이미지/폰트)
+├── firebase/                   # Firebase 관련 설정
+├── package.json
+└── README.md
+```
 
-## Stay in the loop
+## 스크립트
 
-If you would like to know when we release new resources, you can follow [@pacovitiello](https://x.com/pacovitiello) and [@DavidePacilio](https://x.com/DavidePacilio) on X, or you can subscribe to our [newsletter](https://cruip.com/newsletter/).
-
-
-<!-- Security scan triggered at 2025-09-02 20:56:57 -->
-
-<!-- Security scan triggered at 2025-09-11 05:47:48 -->
-
-<!-- Security scan triggered at 2025-09-28 15:24:16 -->
-
-<!-- Security scan triggered at 2025-09-28 15:27:01 -->
+- `npm run dev`: 개발 서버 실행
+- `npm run build`: 프로덕션 빌드
+- `npm run start`: 프로덕션 서버 실행
+- `npm run lint`: 린트 실행
+- `npm run deploy`: 배포 스크립트 실행
