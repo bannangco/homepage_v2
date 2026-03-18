@@ -30,6 +30,11 @@ export async function getAnnouncements(): Promise<Announcement[]> {
   }
 }
 
+export async function getAnnouncementById(id: string): Promise<Announcement | null> {
+  const announcements = await getAnnouncements();
+  return announcements.find((announcement) => announcement.id === id) ?? null;
+}
+
 export async function createAnnouncement(input: {
   title: string;
   content: string;

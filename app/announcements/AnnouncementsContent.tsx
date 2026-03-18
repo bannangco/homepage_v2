@@ -3,6 +3,8 @@
 import { Announcement } from '@/types/announcement';
 import { useEffect, useState } from 'react';
 import { fetchAnnouncements } from '@/lib/repositories/announcements/client';
+import Link from 'next/link';
+import { formatDateYYYYMMDD } from '@/utils/formatDate';
 
 export default function AnnouncementsContent() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -16,7 +18,7 @@ export default function AnnouncementsContent() {
         setAnnouncements(result);
       } catch (err) {
         console.error('Error fetching announcements:', err);
-        setError('공지사항을 불러오는 중 오류가 발생했습니다.');
+        setError('지금은 소식을 불러오지 못하고 있어요. 잠시 후 다시 확인해주세요.');
       } finally {
         setLoading(false);
       }
@@ -31,9 +33,7 @@ export default function AnnouncementsContent() {
         <div className="mb-8">
           <h1 className="text-3xl font-semibold text-gray-200">공지사항</h1>
         </div>
-        <div className="text-center text-gray-400">
-          로딩 중...
-        </div>
+        <div className="text-center text-gray-400">반낭코 소식을 불러오는 중입니다...</div>
       </div>
     );
   }
@@ -44,7 +44,7 @@ export default function AnnouncementsContent() {
         <div className="mb-8">
           <h1 className="text-3xl font-semibold text-gray-200">공지사항</h1>
         </div>
-        <div className="rounded-md bg-red-500/10 p-4 text-red-400">
+        <div className="rounded-md bg-red-500/10 p-4 text-red-300">
           {error}
         </div>
       </div>
@@ -59,7 +59,7 @@ export default function AnnouncementsContent() {
 
       <div className="space-y-8">
         {announcements.length === 0 ? (
-          <p className="text-center text-gray-400">아직 공지사항이 없습니다.</p>
+          <p className="text-center text-gray-400">아직 등록된 공지가 없어요. 곧 새로운 소식으로 찾아올게요.</p>
         ) : (
           announcements.map((announcement) => (
             <article
@@ -71,13 +71,17 @@ export default function AnnouncementsContent() {
                   {announcement.title}
                 </h2>
                 <p className="text-indigo-200/65">
-                  {new Date(announcement.createdAt).toLocaleDateString()}
+                  {formatDateYYYYMMDD(announcement.createdAt)}
                 </p>
               </header>
 
-              <div className="prose prose-invert mb-4 max-w-none">
+              <div className="mb-4 whitespace-pre-wrap text-gray-300/90">
                 {announcement.content}
               </div>
+
+              <Link href={`/announcements/${announcement.id}`} className="text-indigo-300 hover:text-indigo-200">
+                자세히 보기 →
+              </Link>
 
               {announcement.fileUrl && (
                 <div className="mt-4">
