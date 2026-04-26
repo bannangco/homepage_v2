@@ -1,7 +1,9 @@
-import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
-import { getAnnouncementById } from '@/lib/repositories/announcements/repository';
-import { formatDateYYYYMMDD } from '@/utils/formatDate';
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
+import { announcements, getAnnouncementById } from "@/lib/announcements";
+import { formatDateYYYYMMDD } from "@/utils/formatDate";
 
 interface AnnouncementDetailPageProps {
   params: Promise<{ id: string }>;
@@ -23,6 +25,12 @@ export async function generateMetadata({ params }: AnnouncementDetailPageProps):
   };
 }
 
+export function generateStaticParams() {
+  return announcements.map((announcement) => ({
+    id: announcement.id,
+  }));
+}
+
 export default async function AnnouncementDetailPage({ params }: AnnouncementDetailPageProps) {
   const { id } = await params;
   const announcement = await getAnnouncementById(id);
@@ -32,27 +40,26 @@ export default async function AnnouncementDetailPage({ params }: AnnouncementDet
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <div className="mx-auto w-full max-w-3xl px-5 pb-24 pt-32 sm:px-6 lg:pt-40">
       <article>
-        <header className="mb-8">
-          <h1 className="mb-2 text-3xl font-semibold text-gray-200">{announcement.title}</h1>
-          <p className="text-indigo-200/65">{formatDateYYYYMMDD(announcement.createdAt)}</p>
+        <header className="mb-10 border-b border-stone-300 pb-8">
+          <Link
+            href="/announcements"
+            className="mb-8 inline-flex text-sm font-semibold text-teal-700 transition hover:text-teal-900"
+          >
+            공지 목록으로 돌아가기
+          </Link>
+          <h1 className="mb-4 font-nacelle text-4xl font-semibold text-stone-950 md:text-6xl">
+            {announcement.title}
+          </h1>
+          <p className="text-stone-500">
+            {formatDateYYYYMMDD(announcement.createdAt)}
+          </p>
         </header>
 
-        <div className="prose prose-invert max-w-none whitespace-pre-wrap">{announcement.content}</div>
-
-        {announcement.fileUrl && (
-          <div className="mt-6">
-            <a
-              href={announcement.fileUrl}
-              className="btn bg-gradient-to-t from-indigo-600 to-indigo-500 bg-[bottom] bg-[length:100%_100%] px-6 py-2 text-white shadow-[inset_0px_1px_0px_0px_theme(colors.white/.16)] hover:bg-[length:100%_150%]"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {announcement.fileName} 다운로드
-            </a>
-          </div>
-        )}
+        <div className="whitespace-pre-wrap text-lg leading-8 text-stone-700">
+          {announcement.content}
+        </div>
       </article>
     </div>
   );

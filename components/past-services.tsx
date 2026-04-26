@@ -1,10 +1,11 @@
 import Image from "next/image";
 import type { StaticImageData } from "next/image";
+
+import Reveal from "@/components/reveal";
 import SplashImg from "@/public/images/workflow-splash.png";
 import MusePickerImg from "@/public/images/workflow-01.png";
 import FriendingImg from "@/public/images/workflow-friending.png";
 import MeetingGoImg from "@/public/images/workflow-meetinggo.png";
-import Spotlight from "@/components/spotlight";
 
 type PastService = {
   name: string;
@@ -46,74 +47,70 @@ const pastServices: PastService[] = [
 
 export default function PastServices() {
   return (
-    <section className="relative" id="past-services">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="py-12 md:py-20">
-          <div className="mx-auto max-w-3xl pb-12 text-center md:pb-20">
-            <div className="inline-flex items-center gap-3 pb-3 before:h-px before:w-8 before:bg-gradient-to-r before:from-transparent before:to-indigo-200/50 after:h-px after:w-8 after:bg-gradient-to-l after:from-transparent after:to-indigo-200/50">
-              <span className="inline-flex bg-gradient-to-r from-indigo-500 to-indigo-200 bg-clip-text text-transparent">
-                종료된 서비스
-              </span>
-            </div>
-            <h2 className="animate-[gradient_6s_linear_infinite] bg-[linear-gradient(to_right,theme(colors.gray.200),theme(colors.indigo.200),theme(colors.gray.50),theme(colors.indigo.300),theme(colors.gray.200))] bg-[length:200%_auto] bg-clip-text pb-4 font-nacelle text-3xl font-semibold text-transparent md:text-4xl">
-              반낭코가 운영했던 서비스
-            </h2>
-            <p className="text-lg text-indigo-200/65">
-              이미지와 함께 운영 종료된 서비스 이력을 확인하실 수 있습니다.
+    <section className="bg-stone-100 px-5 py-24 sm:px-6 lg:py-32" id="past-services">
+      <div className="mx-auto max-w-7xl">
+        <Reveal className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+          <div>
+            <p className="mb-4 text-sm font-semibold uppercase text-teal-700">
+              Archive
             </p>
+            <h2 className="font-nacelle text-4xl font-semibold leading-tight text-stone-950 md:text-6xl">
+              실험하고 운영했던 문화 서비스들
+            </h2>
           </div>
+          <p className="max-w-2xl text-lg leading-8 text-stone-600">
+            반낭코는 여러 문화 서비스 실험을 통해 사용자가 모이고, 예약하고,
+            발견하는 방식을 배웠습니다.
+          </p>
+        </Reveal>
 
-          <Spotlight className="group mx-auto grid max-w-sm items-start gap-6 md:max-w-2xl md:grid-cols-2 lg:max-w-none lg:grid-cols-4">
-            {pastServices.map((service) => {
-              const cardClassName =
-                "group/card relative h-full overflow-hidden rounded-2xl bg-gray-800 p-px before:pointer-events-none before:absolute before:-left-40 before:-top-40 before:z-10 before:h-80 before:w-80 before:translate-x-[var(--mouse-x)] before:translate-y-[var(--mouse-y)] before:rounded-full before:bg-indigo-500/80 before:opacity-0 before:blur-3xl before:transition-opacity before:duration-500 after:pointer-events-none after:absolute after:-left-48 after:-top-48 after:z-30 after:h-64 after:w-64 after:translate-x-[var(--mouse-x)] after:translate-y-[var(--mouse-y)] after:rounded-full after:bg-indigo-500 after:opacity-0 after:blur-3xl after:transition-opacity after:duration-500 after:hover:opacity-20 before:group-hover:opacity-100";
-
-              const cardContent = (
-                <div className="relative z-20 h-full overflow-hidden rounded-[inherit] bg-gray-950 after:absolute after:inset-0 after:bg-gradient-to-br after:from-gray-900/50 after:via-gray-800/25 after:to-gray-900/50">
+        <div className="mt-16 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+          {pastServices.map((service, index) => {
+            const content = (
+              <>
+                <div className="flex aspect-[4/3] items-center justify-center bg-stone-200 p-6">
                   <Image
-                    className="inline-flex"
                     src={service.image}
-                    width={350}
-                    height={288}
-                    alt={service.name}
+                    alt={`${service.name} 서비스 이미지`}
+                    className="h-full w-full object-contain transition duration-500 group-hover:scale-[1.03]"
                   />
-                  <div className="p-6">
-                    <div className="mb-3 flex flex-wrap items-center gap-2">
-                      <span className="btn-sm relative rounded-full bg-gray-800/40 px-2.5 py-0.5 text-xs font-normal before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:border before:border-transparent before:[background:linear-gradient(to_bottom,theme(colors.gray.700/.15),theme(colors.gray.700/.5))_border-box] before:[mask-composite:exclude_!important] before:[mask:linear-gradient(white_0_0)_padding-box,_linear-gradient(white_0_0)] hover:bg-gray-800/60">
-                        <span className="bg-gradient-to-r from-indigo-500 to-indigo-200 bg-clip-text text-transparent">
-                          {service.name}
-                        </span>
-                      </span>
-                      <span className="rounded-full bg-gray-800/40 px-2.5 py-0.5 text-xs text-indigo-200/75">
-                        {service.endedAt}
-                      </span>
-                    </div>
-                    <p className="text-indigo-200/65">{service.description}</p>
-                  </div>
                 </div>
-              );
-
-              if (!service.href) {
-                return (
-                  <div key={service.name} className={cardClassName}>
-                    {cardContent}
+                <div className="p-5">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <h3 className="font-nacelle text-2xl font-semibold text-stone-950">
+                      {service.name}
+                    </h3>
+                    <span className="shrink-0 text-xs font-semibold text-teal-700">
+                      {service.endedAt}
+                    </span>
                   </div>
-                );
-              }
+                  <p className="text-sm leading-6 text-stone-600">
+                    {service.description}
+                  </p>
+                </div>
+              </>
+            );
 
-              return (
-                <a
-                  key={service.name}
-                  className={cardClassName}
-                  href={service.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {cardContent}
-                </a>
-              );
-            })}
-          </Spotlight>
+            const className =
+              "group block overflow-hidden rounded-lg border border-stone-300 bg-white transition duration-300 hover:-translate-y-1 hover:border-stone-400 hover:shadow-xl hover:shadow-stone-900/10";
+
+            return (
+              <Reveal key={service.name} delay={index * 90}>
+                {service.href ? (
+                  <a
+                    className={className}
+                    href={service.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {content}
+                  </a>
+                ) : (
+                  <div className={className}>{content}</div>
+                )}
+              </Reveal>
+            );
+          })}
         </div>
       </div>
     </section>

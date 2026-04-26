@@ -5,23 +5,45 @@ import Logo from "./logo";
 
 export default function Header() {
   return (
-    <header className="z-30 mt-2 w-full md:mt-5">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="relative flex h-14 items-center justify-between gap-3 rounded-2xl bg-gray-900/90 px-3 before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:border before:border-transparent before:[background:linear-gradient(to_right,theme(colors.gray.800),theme(colors.gray.700),theme(colors.gray.800))_border-box] before:[mask-composite:exclude_!important] before:[mask:linear-gradient(white_0_0)_padding-box,_linear-gradient(white_0_0)] after:absolute after:inset-0 after:-z-10 after:backdrop-blur-sm">
-          {/* Site branding */}
-          <div className="flex flex-1 items-center">
+    <header className="fixed inset-x-0 top-0 z-50 w-full">
+      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
+        <div className="flex h-14 items-center justify-between gap-4 rounded-lg border border-white/15 bg-stone-950/55 px-4 text-white shadow-2xl shadow-stone-950/20 backdrop-blur-md">
+          <div className="flex min-w-0 flex-1 items-center">
             <Logo />
           </div>
-          {/* Navigation */}
           <nav>
-            <ul className="flex items-center gap-2">
+            <ul className="flex items-center gap-1 text-sm font-semibold">
+              <li className="hidden sm:block">
+                <Link
+                  href="/#mission"
+                  className="rounded-lg px-3 py-2 text-white/75 transition hover:bg-white/10 hover:text-white"
+                >
+                  회사
+                </Link>
+              </li>
+              <li className="hidden sm:block">
+                <Link
+                  href="/#services"
+                  className="rounded-lg px-3 py-2 text-white/75 transition hover:bg-white/10 hover:text-white"
+                >
+                  서비스
+                </Link>
+              </li>
               <li>
                 <Link
                   href="/announcements"
-                  className="btn-sm relative bg-gradient-to-b from-gray-800 to-gray-800/60 bg-[length:100%_100%] bg-[bottom] py-[5px] text-gray-300 before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:border before:border-transparent before:[background:linear-gradient(to_right,theme(colors.gray.800),theme(colors.gray.700),theme(colors.gray.800))_border-box] before:[mask-composite:exclude_!important] before:[mask:linear-gradient(white_0_0)_padding-box,_linear-gradient(white_0_0)] hover:bg-[length:100%_150%]"
+                  className="rounded-lg px-3 py-2 text-white/75 transition hover:bg-white/10 hover:text-white"
                 >
-                  회사 공고
+                  공고
                 </Link>
+              </li>
+              <li className="hidden md:block">
+                <a
+                  href="mailto:bannangko@gmail.com"
+                  className="ml-2 inline-flex min-h-9 items-center rounded-lg bg-teal-300 px-4 text-stone-950 transition hover:bg-teal-200"
+                >
+                  문의
+                </a>
               </li>
             </ul>
           </nav>

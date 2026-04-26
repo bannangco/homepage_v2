@@ -40,14 +40,14 @@ const nacelle = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "반낭코 - 문화생활을 혁신하다",
+  title: "Bannangco - 주식회사 반낭코",
   description:
-    "반낭코는 인류의 문화생활을 혁신하겠다는 목표를 가진, Computer Science 중심 IT 회사입니다.",
+    "반낭코는 문화 서비스, 커뮤니티, 예약과 발견의 경험을 온라인 기술로 더 즐겁게 만드는 Korean culture-tech startup입니다.",
   metadataBase: new URL("https://bannangco.com"),
   openGraph: {
-    title: "반낭코 - 문화생활을 혁신하다",
+    title: "Bannangco - 주식회사 반낭코",
     description:
-      "반낭코는 인류의 문화생활을 혁신하겠다는 목표를 가진, Computer Science 중심 IT 회사입니다.",
+      "반낭코는 문화 서비스, 커뮤니티, 예약과 발견의 경험을 온라인 기술로 더 즐겁게 만드는 Korean culture-tech startup입니다.",
     type: "website",
     url: "https://bannangco.com",
     images: [
@@ -55,15 +55,15 @@ export const metadata: Metadata = {
         url: "/images/ogimage.png",
         width: 1200,
         height: 630,
-        alt: "반낭코 - 문화생활을 혁신하다",
+        alt: "Bannangco - 주식회사 반낭코",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "반낭코 - 문화생활을 혁신하다",
+    title: "Bannangco - 주식회사 반낭코",
     description:
-      "반낭코는 인류의 문화생활을 혁신하겠다는 목표를 가진, Computer Science 중심 IT 회사입니다.",
+      "반낭코는 문화 서비스, 커뮤니티, 예약과 발견의 경험을 온라인 기술로 더 즐겁게 만드는 Korean culture-tech startup입니다.",
     images: ["/images/ogimage.png"],
   },
   other: {
@@ -79,7 +79,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body
-        className={`${inter.variable} ${nacelle.variable} bg-gray-950 font-inter text-base text-gray-200 antialiased`}
+        className={`${inter.variable} ${nacelle.variable} bg-stone-100 font-inter text-base text-stone-900 antialiased`}
       >
         <div className="flex min-h-screen flex-col overflow-hidden supports-[overflow:clip]:overflow-clip">
           <Header />

@@ -1,7 +1,6 @@
 # Allow all crawlers
 User-agent: *
 Allow: /
-Disallow: /announcements/new
 
 # Sitemap location
 Sitemap: https://bannangco.com/sitemap.xml 
