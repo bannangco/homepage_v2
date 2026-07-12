@@ -36,7 +36,7 @@ export default function Footer() {
                 </li>
                 <li>
                   <Link className="transition hover:text-white" href="/announcements">
-                    공지사항
+                    전자공고·법적 고지
                   </Link>
                 </li>
               </ul>

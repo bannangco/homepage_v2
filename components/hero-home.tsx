@@ -1,15 +1,14 @@
-import Image from "next/image";
+import StaticImage from "@/components/ui/static-image";
 import HeroImage from "@/public/images/hero-image-01.jpg";
 
 export default function HeroHome() {
   return (
     <section className="relative min-h-[92svh] overflow-hidden bg-stone-950 text-white">
-      <Image
+      <StaticImage
         src={HeroImage}
         alt="디지털 기술로 연결되는 문화 경험"
         fill
         priority
-        sizes="100vw"
         className="object-cover object-center opacity-60 grayscale"
       />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(10,10,8,0.92)_0%,rgba(10,10,8,0.72)_38%,rgba(10,10,8,0.24)_100%)]" />
