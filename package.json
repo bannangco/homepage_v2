@@ -2,28 +2,33 @@
   "name": "bannangco-homepage-v2",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=24 <25"
+  },
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
-    "start": "next start -p 3001 -H 127.0.0.1",
     "lint": "eslint . --max-warnings=0",
-    "start:pm2": "pm2 start npm --name bannangco-homepage -- start",
-    "stop:pm2": "pm2 delete bannangco-homepage"
+    "typecheck": "tsc --noEmit",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/date-only.test.mjs",
+    "build": "next build",
+    "check:static": "node scripts/check-static-export.mjs",
+    "preview": "serve out"
   },
   "dependencies": {
-    "next": "^15.5.15",
-    "react": "19.0.0",
-    "react-dom": "19.0.0"
+    "next": "15.5.20",
+    "react": "19.2.7",
+    "react-dom": "19.2.7"
   },
   "devDependencies": {
     "@tailwindcss/forms": "^0.5.11",
-    "@types/node": "^22.19.17",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
+    "@types/node": "24.13.3",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
     "autoprefixer": "^10.5.0",
     "eslint": "^9.39.4",
-    "eslint-config-next": "^15.5.15",
+    "eslint-config-next": "15.5.20",
     "postcss": "^8.5.10",
+    "serve": "14.2.6",
     "tailwindcss": "^3.4.19",
     "typescript": "^5.9.3"
   },

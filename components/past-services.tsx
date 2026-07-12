@@ -1,7 +1,7 @@
-import Image from "next/image";
 import type { StaticImageData } from "next/image";
 
 import Reveal from "@/components/reveal";
+import StaticImage from "@/components/ui/static-image";
 import SplashImg from "@/public/images/workflow-splash.png";
 import MusePickerImg from "@/public/images/workflow-01.png";
 import FriendingImg from "@/public/images/workflow-friending.png";
@@ -69,7 +69,7 @@ export default function PastServices() {
             const content = (
               <>
                 <div className="flex aspect-[4/3] items-center justify-center bg-stone-200 p-6">
-                  <Image
+                  <StaticImage
                     src={service.image}
                     alt={`${service.name} 서비스 이미지`}
                     className="h-full w-full object-contain transition duration-500 group-hover:scale-[1.03]"

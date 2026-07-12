@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import localFont from "next/font/local";
 
+import Footer from "@/components/ui/footer";
 import Header from "@/components/ui/header";
 
 const inter = Inter({
@@ -82,8 +83,21 @@ export default function RootLayout({
         className={`${inter.variable} ${nacelle.variable} bg-stone-100 font-inter text-base text-stone-900 antialiased`}
       >
         <div className="flex min-h-screen flex-col overflow-hidden supports-[overflow:clip]:overflow-clip">
+          <a
+            href="#main-content"
+            className="fixed left-4 top-4 z-[100] inline-flex min-h-11 -translate-y-24 items-center rounded-lg bg-white px-4 font-semibold text-stone-950 shadow-lg transition focus-visible:translate-y-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 motion-reduce:transition-none"
+          >
+            본문으로 건너뛰기
+          </a>
           <Header />
-          {children}
+          <main
+            id="main-content"
+            tabIndex={-1}
+            className="relative flex grow flex-col"
+          >
+            {children}
+          </main>
+          <Footer />
         </div>
       </body>
     </html>

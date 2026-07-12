@@ -1,8 +1,15 @@
+import type { Metadata } from "next";
+
 import Hero from '@/components/hero-home';
 import Features from '@/components/features';
 import Workflows from '@/components/workflows';
 import PastServices from '@/components/past-services';
-import Announcements from '@/components/announcements';
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "/",
+  },
+};
 
 export default function Home() {
   return (
@@ -11,7 +18,6 @@ export default function Home() {
       <Features />
       <Workflows />
       <PastServices />
-      <Announcements />
     </>
   );
 }
