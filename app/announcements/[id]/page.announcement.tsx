@@ -73,16 +73,26 @@ export default async function AnnouncementDetailPage({ params }: AnnouncementDet
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-5 pb-24 pt-32 sm:px-6 lg:pt-40">
-      <article>
-        <header className="mb-10 border-b border-stone-300 pb-8">
+    <div className="relative isolate w-full overflow-hidden bg-ivory px-5 pb-24 pt-36 text-ink sm:px-6 lg:pb-32 lg:pt-44">
+      <div
+        className="pointer-events-none absolute inset-y-0 left-1/2 -z-10 w-px bg-grid"
+        aria-hidden="true"
+      />
+      <article className="mx-auto max-w-4xl border-x border-grid bg-ivory px-5 sm:px-8 lg:px-12">
+        <header className="border-b border-border pb-10 lg:pb-14">
           <Link
             href="/announcements"
-            className="mb-8 inline-flex text-sm font-semibold text-teal-700 transition hover:text-teal-900"
+            className="mb-10 inline-flex min-h-11 items-center border-b border-border font-mono text-xs uppercase tracking-[0.16em] text-ink-muted outline-none transition-colors hover:border-ink hover:text-ink focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-4 focus-visible:ring-offset-ivory motion-reduce:transition-none"
           >
-            전자공고·법적 고지 목록으로 돌아가기
+            <span className="mr-3" aria-hidden="true">
+              ←
+            </span>
+            Legal archive
           </Link>
-          <h1 className="mb-4 font-nacelle text-4xl font-semibold text-stone-950 md:text-6xl">
+          <p className="mb-5 font-mono text-xs uppercase tracking-[0.2em] text-ink-muted">
+            전자공고·법적 고지
+          </p>
+          <h1 className="max-w-3xl font-nacelle text-4xl font-semibold leading-[1.1] tracking-[-0.035em] text-ink sm:text-5xl lg:text-6xl">
             {announcement.title}
           </h1>
           <time
@@ -91,14 +101,14 @@ export default async function AnnouncementDetailPage({ params }: AnnouncementDet
                 ? announcement.createdAt
                 : undefined
             }
-            className="text-stone-500"
+            className="mt-7 block border-l-4 border-signal pl-4 font-mono text-sm text-ink-muted"
           >
             {formatDateYYYYMMDD(announcement.createdAt)}
           </time>
         </header>
 
         {announcement.content ? (
-          <div className="whitespace-pre-wrap text-lg leading-8 text-stone-700">
+          <div className="whitespace-pre-wrap border-b border-border py-12 text-lg leading-9 text-ink-muted">
             {announcement.content}
           </div>
         ) : null}
@@ -106,13 +116,21 @@ export default async function AnnouncementDetailPage({ params }: AnnouncementDet
         {announcement.document ? (
           <a
             href={announcement.document.href}
-            className="mt-10 inline-flex min-h-11 items-center rounded-lg border border-stone-300 px-5 text-sm font-semibold text-stone-900 transition hover:border-stone-950"
+            className="my-10 inline-flex min-h-12 items-center border border-ink bg-ink px-5 text-sm font-semibold text-ivory outline-none transition-colors hover:bg-signal hover:text-ink focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-4 focus-visible:ring-offset-ivory motion-reduce:transition-none"
             target="_blank"
             rel="noopener noreferrer"
           >
             {announcement.document.label}
+            <span className="ml-3" aria-hidden="true">
+              ↗
+            </span>
           </a>
         ) : null}
+
+        <div className="flex items-center justify-between border-t border-border py-5 font-mono text-[0.6875rem] uppercase tracking-[0.16em] text-ink-muted">
+          <span>Official notice</span>
+          <span>Bannangco</span>
+        </div>
       </article>
     </div>
   );

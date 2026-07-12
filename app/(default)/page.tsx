@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 
-import Hero from '@/components/hero-home';
-import Features from '@/components/features';
-import Workflows from '@/components/workflows';
-import PastServices from '@/components/past-services';
+import CurrentSignal from "@/components/current-signal";
+import Features from "@/components/features";
+import Hero from "@/components/hero-home";
+import ServicesArchive from "@/components/services-archive";
+import Workflows from "@/components/workflows";
 
 export const metadata: Metadata = {
   alternates: {
@@ -15,9 +16,10 @@ export default function Home() {
   return (
     <>
       <Hero />
+      <CurrentSignal />
+      <ServicesArchive />
       <Features />
       <Workflows />
-      <PastServices />
     </>
   );
 }

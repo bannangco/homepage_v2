@@ -85,6 +85,39 @@ function exportedPathFromUrl(url) {
   return path.join(outputRoot, ...pathname.slice(1).split("/"));
 }
 
+function textFromHtmlFragment(html) {
+  return html
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/<[^>]+>/g, "")
+    .replaceAll("&amp;", "&")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&#39;", "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function hasAccessibleMusePickerHeading(html) {
+  for (const match of html.matchAll(/<h([1-6])\b([^>]*)>([\s\S]*?)<\/h\1>/gi)) {
+    const [, , attributes, content] = match;
+    if (/\baria-hidden\s*=\s*["']true["']/i.test(attributes)) {
+      continue;
+    }
+    if (textFromHtmlFragment(content).includes("MusePicker")) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function getVisibleDocumentText(html) {
+  return textFromHtmlFragment(
+    html.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, " "),
+  );
+}
+
 await requireFile("index.html");
 await requireFile("404.html");
 await requireFile("robots.txt");
@@ -127,6 +160,53 @@ try {
   htmlFiles = await collectHtmlFiles(outputRoot);
 } catch {
   failures.push("Unable to inspect the out/ directory. Run `npm run build` first.");
+}
+
+let homepageHtml = "";
+try {
+  homepageHtml = await readFile(path.join(outputRoot, "index.html"), "utf8");
+} catch {
+  // The required-file check above already reports a missing homepage.
+}
+
+if (homepageHtml) {
+  if (!hasAccessibleMusePickerHeading(homepageHtml)) {
+    failures.push(
+      "out/index.html does not contain an accessible MusePicker heading.",
+    );
+  }
+
+  const forbiddenHomepageValues = [
+    "AI operated metasearch website for Museums, Galleries, and Art in U.S. 2025.04 종료",
+    "2024.12 종료",
+    "friending.so",
+    "meetinggo.kr",
+    "musepicker.com",
+    "workflow-01.png",
+  ];
+  for (const forbiddenValue of forbiddenHomepageValues) {
+    if (homepageHtml.includes(forbiddenValue)) {
+      failures.push(
+        `out/index.html contains removed service content: ${forbiddenValue}`,
+      );
+    }
+  }
+
+  const visibleText = getVisibleDocumentText(homepageHtml);
+  let musePickerIndex = visibleText.indexOf("MusePicker");
+  while (musePickerIndex !== -1) {
+    const nextServiceIndex = visibleText.indexOf("Splash", musePickerIndex + 1);
+    if (
+      nextServiceIndex !== -1 &&
+      visibleText.slice(musePickerIndex, nextServiceIndex).includes("종료")
+    ) {
+      failures.push(
+        "out/index.html incorrectly describes MusePicker as an ended service.",
+      );
+      break;
+    }
+    musePickerIndex = visibleText.indexOf("MusePicker", musePickerIndex + 1);
+  }
 }
 
 for (const htmlFile of htmlFiles) {

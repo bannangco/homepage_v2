@@ -5,6 +5,14 @@ import { useEffect, useRef, useState } from "react";
 
 import Logo from "./logo";
 
+const navigationItems = [
+  { href: "/#company", label: "회사" },
+  { href: "/#services", label: "서비스" },
+] as const;
+
+const navigationLinkClassName =
+  "inline-flex min-h-11 items-center border-b border-transparent px-3 text-sm font-semibold text-ivory-muted outline-none transition-colors hover:border-signal hover:text-ivory focus-visible:border-signal focus-visible:text-ivory focus-visible:ring-2 focus-visible:ring-signal focus-visible:ring-offset-2 focus-visible:ring-offset-ink motion-reduce:transition-none";
+
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -26,34 +34,35 @@ export default function Header() {
   const closeMenu = () => setIsMenuOpen(false);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 w-full">
-      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-        <div className="flex h-14 items-center justify-between gap-4 rounded-lg border border-white/15 bg-stone-950/55 px-4 text-white shadow-2xl shadow-stone-950/20 backdrop-blur-md">
-          <div className="flex min-w-0 flex-1 items-center">
+    <header
+      id="site-header"
+      className="fixed inset-x-0 top-0 z-50 w-full border-b border-border bg-ink/95 text-ivory backdrop-blur-md"
+    >
+      <div className="mx-auto max-w-[90rem] px-4 sm:px-6 lg:px-8">
+        <div className="flex h-[4.5rem] items-center justify-between gap-4">
+          <div className="flex min-w-0 flex-1 items-center gap-5">
             <Logo />
+            <span
+              className="hidden border-l border-border pl-5 font-mono text-[0.6875rem] uppercase tracking-[0.18em] text-ivory-muted lg:block"
+              aria-hidden="true"
+            >
+              BNCO / Cultural signal
+            </span>
           </div>
+
           <nav aria-label="주요 메뉴" className="hidden sm:block">
-            <ul className="flex items-center gap-1 text-sm font-semibold">
-              <li>
-                <Link
-                  href="/#mission"
-                  className="inline-flex min-h-11 items-center rounded-lg px-3 text-white/75 transition hover:bg-white/10 hover:text-white"
-                >
-                  회사
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/#services"
-                  className="inline-flex min-h-11 items-center rounded-lg px-3 text-white/75 transition hover:bg-white/10 hover:text-white"
-                >
-                  서비스
-                </Link>
-              </li>
+            <ul className="flex items-center gap-2">
+              {navigationItems.map((item) => (
+                <li key={item.href}>
+                  <Link href={item.href} className={navigationLinkClassName}>
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
               <li>
                 <a
                   href="mailto:bannangko@gmail.com"
-                  className="ml-2 inline-flex min-h-11 items-center rounded-lg bg-teal-300 px-4 text-stone-950 transition hover:bg-teal-200"
+                  className="ml-2 inline-flex min-h-11 items-center border border-signal bg-signal px-4 text-sm font-semibold text-ink outline-none transition-colors hover:bg-ivory focus-visible:ring-2 focus-visible:ring-signal focus-visible:ring-offset-2 focus-visible:ring-offset-ink motion-reduce:transition-none"
                 >
                   문의
                 </a>
@@ -62,9 +71,10 @@ export default function Header() {
           </nav>
 
           <button
+            id="mobile-menu-button"
             ref={menuButtonRef}
             type="button"
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-white transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:hidden"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center border border-border text-ivory outline-none transition-colors hover:border-signal hover:text-signal focus-visible:ring-2 focus-visible:ring-signal focus-visible:ring-offset-2 focus-visible:ring-offset-ink motion-reduce:transition-none sm:hidden"
             aria-label={isMenuOpen ? "주요 메뉴 닫기" : "주요 메뉴 열기"}
             aria-expanded={isMenuOpen}
             aria-controls="mobile-navigation"
@@ -75,20 +85,20 @@ export default function Header() {
               className="h-6 w-6"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
+              strokeWidth="1.5"
+              strokeLinecap="square"
               aria-hidden="true"
             >
               {isMenuOpen ? (
                 <>
-                  <path d="M6 6l12 12" />
-                  <path d="M18 6L6 18" />
+                  <path d="M5 5l14 14" />
+                  <path d="M19 5L5 19" />
                 </>
               ) : (
                 <>
-                  <path d="M4 7h16" />
-                  <path d="M4 12h16" />
-                  <path d="M4 17h16" />
+                  <path d="M3 6h18" />
+                  <path d="M3 12h18" />
+                  <path d="M3 18h18" />
                 </>
               )}
             </svg>
@@ -99,38 +109,69 @@ export default function Header() {
           id="mobile-navigation"
           aria-label="모바일 주요 메뉴"
           hidden={!isMenuOpen}
-          className="mt-2 rounded-lg border border-white/15 bg-stone-950/95 p-2 text-sm font-semibold text-white shadow-2xl shadow-stone-950/20 backdrop-blur-md sm:hidden"
+          className="border-t border-border bg-ink pb-4 pt-2 text-ivory sm:hidden"
         >
-          <ul className="space-y-1">
-            <li>
-              <Link
-                href="/#mission"
-                className="flex min-h-11 items-center rounded-lg px-4 text-white/75 transition hover:bg-white/10 hover:text-white"
-                onClick={closeMenu}
-              >
-                회사
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/#services"
-                className="flex min-h-11 items-center rounded-lg px-4 text-white/75 transition hover:bg-white/10 hover:text-white"
-                onClick={closeMenu}
-              >
-                서비스
-              </Link>
-            </li>
+          <ul className="divide-y divide-border border-b border-border">
+            {navigationItems.map((item) => (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className="flex min-h-11 items-center justify-between px-2 py-2 text-base font-semibold text-ivory-muted outline-none transition-colors hover:bg-surface-dark hover:text-ivory focus-visible:bg-surface-dark focus-visible:text-signal focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-signal motion-reduce:transition-none"
+                  onClick={closeMenu}
+                >
+                  {item.label}
+                  <span aria-hidden="true">↘</span>
+                </Link>
+              </li>
+            ))}
             <li>
               <a
                 href="mailto:bannangko@gmail.com"
-                className="flex min-h-11 items-center rounded-lg bg-teal-300 px-4 text-stone-950 transition hover:bg-teal-200"
+                className="flex min-h-11 items-center justify-between bg-signal px-2 py-2 text-base font-semibold text-ink outline-none transition-colors hover:bg-ivory focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ink motion-reduce:transition-none"
                 onClick={closeMenu}
               >
                 문의
+                <span aria-hidden="true">↗</span>
               </a>
             </li>
           </ul>
         </nav>
+
+        <noscript>
+          <style>{`
+            @media (max-width: 639px) {
+              #site-header { position: relative !important; }
+              #mobile-menu-button { display: none !important; }
+            }
+          `}</style>
+          <nav
+            aria-label="모바일 주요 메뉴"
+            className="border-t border-border bg-ink pb-4 pt-2 text-ivory sm:hidden"
+          >
+            <ul className="divide-y divide-border border-b border-border">
+              {navigationItems.map((item) => (
+                <li key={item.href}>
+                  <a
+                    href={item.href}
+                    className="flex min-h-11 items-center justify-between px-2 py-2 text-base font-semibold text-ivory-muted"
+                  >
+                    {item.label}
+                    <span aria-hidden="true">↘</span>
+                  </a>
+                </li>
+              ))}
+              <li>
+                <a
+                  href="mailto:bannangko@gmail.com"
+                  className="flex min-h-11 items-center justify-between bg-signal px-2 py-2 text-base font-semibold text-ink"
+                >
+                  문의
+                  <span aria-hidden="true">↗</span>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </noscript>
       </div>
     </header>
   );

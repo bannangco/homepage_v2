@@ -1,67 +1,84 @@
-import Logo from "./logo";
 import Link from "next/link";
+
+import Logo from "./logo";
+
+const footerLinkClassName =
+  "inline-flex min-h-11 items-center text-ivory-muted outline-none transition-colors hover:text-signal focus-visible:text-signal focus-visible:ring-2 focus-visible:ring-signal focus-visible:ring-offset-2 focus-visible:ring-offset-ink motion-reduce:transition-none";
 
 export default function Footer() {
   return (
-    <footer className="bg-stone-950 px-5 py-16 text-white sm:px-6">
-      <div className="mx-auto max-w-7xl">
-        <div className="grid gap-12 border-b border-white/15 pb-12 lg:grid-cols-[1.3fr_0.7fr]">
+    <footer className="border-t border-border bg-ink px-5 py-16 text-ivory sm:px-6 lg:py-20">
+      <div className="mx-auto max-w-[90rem]">
+        <div className="grid gap-14 border-b border-border pb-14 lg:grid-cols-[minmax(0,1.45fr)_minmax(18rem,0.55fr)] lg:gap-20">
           <div>
-            <p className="mb-4 text-sm font-semibold uppercase text-teal-200">
-              Contact
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-signal">
+              Contact / 04
             </p>
-            <h2 className="max-w-3xl font-nacelle text-4xl font-semibold leading-tight md:text-6xl">
-              문화와 기술이 만나는 다음 서비스를 함께 이야기해요.
+            <h2 className="mt-5 max-w-4xl font-nacelle text-4xl font-semibold leading-[1.12] tracking-[-0.03em] text-ivory sm:text-5xl lg:text-6xl">
+              다음 문화 경험을 함께 이야기해요.
             </h2>
             <a
               href="mailto:bannangko@gmail.com"
-              className="mt-8 inline-flex min-h-12 items-center rounded-lg bg-teal-300 px-6 text-sm font-semibold text-stone-950 transition hover:bg-teal-200"
+              className="mt-8 inline-flex min-h-12 items-center border-b border-signal text-base font-semibold text-ivory outline-none transition-colors hover:text-signal focus-visible:ring-2 focus-visible:ring-signal focus-visible:ring-offset-4 focus-visible:ring-offset-ink motion-reduce:transition-none sm:text-lg"
             >
               bannangko@gmail.com
+              <span className="ml-3 text-signal" aria-hidden="true">
+                ↗
+              </span>
             </a>
           </div>
-          <nav className="grid grid-cols-2 gap-8 text-sm">
+
+          <nav
+            aria-label="푸터 메뉴"
+            className="grid grid-cols-2 gap-x-8 gap-y-10 border-t border-border pt-6 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0"
+          >
             <div>
-              <h3 className="mb-4 font-semibold text-white">회사</h3>
-              <ul className="space-y-3 text-white/65">
+              <h3 className="font-mono text-xs uppercase tracking-[0.18em] text-ivory-muted">
+                Navigate
+              </h3>
+              <ul className="mt-4 text-sm font-semibold">
                 <li>
-                  <Link className="transition hover:text-white" href="/#mission">
-                    소개
+                  <Link className={footerLinkClassName} href="/#company">
+                    회사
                   </Link>
                 </li>
                 <li>
-                  <Link className="transition hover:text-white" href="/#past-services">
-                    서비스 아카이브
-                  </Link>
-                </li>
-                <li>
-                  <Link className="transition hover:text-white" href="/announcements">
-                    전자공고·법적 고지
+                  <Link className={footerLinkClassName} href="/#services">
+                    서비스
                   </Link>
                 </li>
               </ul>
             </div>
+
             <div>
-              <h3 className="mb-4 font-semibold text-white">외부 채널</h3>
-              <ul className="space-y-3 text-white/65">
+              <h3 className="font-mono text-xs uppercase tracking-[0.18em] text-ivory-muted">
+                Channels
+              </h3>
+              <ul className="mt-4 text-sm font-semibold">
                 <li>
                   <a
-                    className="transition hover:text-white"
+                    className={footerLinkClassName}
                     href="https://github.com/bannangco"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
                     GitHub
+                    <span className="ml-2" aria-hidden="true">
+                      ↗
+                    </span>
                   </a>
                 </li>
                 <li>
                   <a
-                    className="transition hover:text-white"
-                    href="https://www.linkedin.com/company/bannangco"
+                    className={footerLinkClassName}
+                    href="https://kr.linkedin.com/company/bannangco"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
                     LinkedIn
+                    <span className="ml-2" aria-hidden="true">
+                      ↗
+                    </span>
                   </a>
                 </li>
               </ul>
@@ -69,9 +86,20 @@ export default function Footer() {
           </nav>
         </div>
 
-        <div className="flex flex-col gap-6 pt-8 text-sm text-white/60 sm:flex-row sm:items-center sm:justify-between">
+        <div className="grid gap-8 pt-8 text-xs text-ivory-muted sm:grid-cols-[auto_1fr] sm:items-end">
           <Logo />
-          <p>© Bannangco. 주식회사 반낭코</p>
+          <div className="flex flex-col gap-3 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-end sm:border-t-0 sm:pt-0">
+            <p>© Bannangco. 주식회사 반낭코</p>
+            <span className="hidden text-border sm:inline" aria-hidden="true">
+              /
+            </span>
+            <Link
+              href="/announcements"
+              className="inline-flex min-h-11 w-fit items-center text-ivory-muted outline-none transition-colors hover:text-ivory focus-visible:text-ivory focus-visible:ring-2 focus-visible:ring-signal focus-visible:ring-offset-2 focus-visible:ring-offset-ink motion-reduce:transition-none"
+            >
+              전자공고·법적 고지
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

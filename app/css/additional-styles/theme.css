@@ -1,7 +1,52 @@
+:root {
+  --color-ink: 15 17 15;
+  --color-ink-muted: 83 86 77;
+  --color-ivory: 247 243 231;
+  --color-ivory-muted: 232 225 205;
+  --color-signal: 251 195 32;
+  --color-grid: 47 51 43;
+  --color-border: 193 185 160;
+  --color-surface-dark: 23 26 22;
+  --color-surface-light: 255 252 244;
+  color-scheme: light;
+}
+
+html {
+  background: rgb(var(--color-ivory));
+  scroll-behavior: smooth;
+}
+
+body {
+  overflow-wrap: anywhere;
+}
+
+::selection {
+  background: rgb(var(--color-signal));
+  color: rgb(var(--color-ink));
+}
+
+[id] {
+  scroll-margin-top: 6rem;
+}
+
+.signal-grid {
+  background-image:
+    linear-gradient(rgb(var(--color-grid) / 0.42) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--color-grid) / 0.42) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.signal-grid-light {
+  background-image:
+    linear-gradient(rgb(var(--color-border) / 0.32) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--color-border) / 0.32) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
 @keyframes heroRise {
   from {
     opacity: 0;
-    transform: translateY(32px);
+    transform: translateY(24px);
   }
   to {
     opacity: 1;
@@ -9,13 +54,48 @@
   }
 }
 
+@keyframes signalTravel {
+  0%,
+  100% {
+    transform: translateX(-12%);
+  }
+  50% {
+    transform: translateX(12%);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-enter-1 {
+    animation: heroRise 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .hero-enter-2 {
+    animation: heroRise 760ms 100ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .hero-enter-3 {
+    animation: heroRise 820ms 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .signal-line-motion {
+    animation: signalTravel 12s ease-in-out infinite;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .signal-line-motion {
+    transform: none !important;
   }
 }

@@ -56,6 +56,10 @@ npm run preview
 - 등록된 문서가 없는 상태도 정상적인 공개 상태입니다.
 - 브라우저 기반 작성 기능, 업로드 API, CMS는 사용하지 않습니다.
 
+## Service catalog and MusePicker treatment
+
+홈페이지 서비스 사실과 표시 상태는 `data/services.ts`의 typed catalog에서 관리합니다. MusePicker의 `temporary-wordmark` presentation은 공식 로고가 아닌 임시 typography treatment이며 명시적으로 `official: false`입니다. 공식 로고가 제공되면 카드 구조를 변경하지 않고 이 항목의 presentation 설정 한 곳만 검증된 image asset으로 교체합니다. 임시 워드마크를 이미지나 Open Graph 이미지로 재사용하지 않습니다.
+
 ## Cloudflare Pages readiness
 
 향후 Cloudflare Pages 프로젝트는 다음 설정을 사용합니다.

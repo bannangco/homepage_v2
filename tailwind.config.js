@@ -7,6 +7,17 @@ module.exports = {
   ],
   theme: {
     extend: {
+      colors: {
+        ink: "rgb(var(--color-ink) / <alpha-value>)",
+        "ink-muted": "rgb(var(--color-ink-muted) / <alpha-value>)",
+        ivory: "rgb(var(--color-ivory) / <alpha-value>)",
+        "ivory-muted": "rgb(var(--color-ivory-muted) / <alpha-value>)",
+        signal: "rgb(var(--color-signal) / <alpha-value>)",
+        grid: "rgb(var(--color-grid) / <alpha-value>)",
+        border: "rgb(var(--color-border) / <alpha-value>)",
+        "surface-dark": "rgb(var(--color-surface-dark) / <alpha-value>)",
+        "surface-light": "rgb(var(--color-surface-light) / <alpha-value>)",
+      },
       fontFamily: {
         inter: ["var(--font-inter)", "sans-serif"],
         nacelle: ["var(--font-nacelle)", "sans-serif"],
@@ -29,20 +40,6 @@ module.exports = {
         "5xl": ["3.5rem", { lineHeight: "1", letterSpacing: "0em" }],
         "6xl": ["4rem", { lineHeight: "1", letterSpacing: "0em" }],
         "7xl": ["4.5rem", { lineHeight: "1", letterSpacing: "0em" }],
-      },
-      animation: {
-        shine: "shine 5s ease-in-out 500ms infinite",
-      },
-      keyframes: {
-        shine: {
-          "0%": { top: "0", transform: "scaleY(5)", opacity: "0" },
-          "10%": { opacity: ".8" },
-          "20%": { top: "100%", transform: "scaleY(10)", opacity: "0" },
-          "100%": { top: "100%", transform: "scaleY(1)", opacity: "0" },
-        },
-        gradient: {
-          to: { "background-position": "200% center" },
-        },
       },
     },
   },

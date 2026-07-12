@@ -13,7 +13,7 @@ import {
 
 const HOME_TITLE = "Bannangco - 주식회사 반낭코";
 const HOME_DESCRIPTION =
-  "반낭코는 문화 서비스, 커뮤니티, 예약과 발견의 경험을 온라인 기술로 더 즐겁게 만드는 Korean culture-tech startup입니다.";
+  "반낭코는 문화 서비스, 커뮤니티, 예약과 발견의 경험을 더 쉽고 풍요롭게 만드는 Korean culture-tech startup입니다.";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -66,12 +66,12 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body
-        className={`${inter.variable} ${nacelle.variable} bg-stone-100 font-inter text-base text-stone-900 antialiased`}
+        className={`${inter.variable} ${nacelle.variable} bg-ivory font-inter text-base text-ink antialiased`}
       >
         <div className="flex min-h-screen flex-col overflow-hidden supports-[overflow:clip]:overflow-clip">
           <a
             href="#main-content"
-            className="fixed left-4 top-4 z-[100] inline-flex min-h-11 -translate-y-24 items-center rounded-lg bg-white px-4 font-semibold text-stone-950 shadow-lg transition focus-visible:translate-y-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 motion-reduce:transition-none"
+            className="fixed left-4 top-4 z-[100] inline-flex min-h-11 -translate-y-24 items-center bg-signal px-4 font-semibold text-ink shadow-lg transition focus-visible:translate-y-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ivory motion-reduce:transition-none"
           >
             본문으로 건너뛰기
           </a>
@@ -79,7 +79,7 @@ export default function RootLayout({
           <main
             id="main-content"
             tabIndex={-1}
-            className="relative flex grow flex-col"
+            className="relative isolate flex grow flex-col"
           >
             {children}
           </main>
