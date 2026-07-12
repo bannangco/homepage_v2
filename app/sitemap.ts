@@ -1,9 +1,8 @@
 import type { MetadataRoute } from "next";
 
+import { getAnnouncementPath } from "@/lib/announcement-contract";
 import { getAnnouncements } from "@/lib/announcements";
-import { isValidISODateOnly } from "@/utils/formatDate";
-
-const SITE_URL = "https://bannangco.com";
+import { SITE_URL } from "@/lib/site-metadata";
 
 export const dynamic = "force-static";
 
@@ -24,14 +23,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const announcementRoutes: MetadataRoute.Sitemap = getAnnouncements().map(
     (announcement) => {
       const route: MetadataRoute.Sitemap[number] = {
-        url: `${SITE_URL}/announcements/${encodeURIComponent(announcement.id)}`,
+        url: `${SITE_URL}${getAnnouncementPath(announcement.id)}`,
         changeFrequency: "yearly",
         priority: 0.4,
+        lastModified: announcement.createdAt,
       };
-
-      if (isValidISODateOnly(announcement.createdAt)) {
-        route.lastModified = announcement.createdAt;
-      }
 
       return route;
     },

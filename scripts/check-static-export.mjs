@@ -2,23 +2,33 @@ import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import {
+  getAnnouncementPath,
+  validateAnnouncements,
+} from "../lib/announcement-contract.ts";
+import { isValidISODateOnly } from "../utils/formatDate.ts";
+
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outputRoot = path.join(projectRoot, "out");
 const failures = [];
 
 let announcements = [];
 try {
-  const announcementData = JSON.parse(
-    await readFile(path.join(projectRoot, "data", "announcements.json"), "utf8"),
+  announcements = validateAnnouncements(
+    JSON.parse(
+      await readFile(
+        path.join(projectRoot, "data", "announcements.json"),
+        "utf8",
+      ),
+    ),
+    isValidISODateOnly,
   );
-
-  if (!Array.isArray(announcementData)) {
-    throw new TypeError("Announcement data must be an array.");
-  }
-
-  announcements = announcementData;
-} catch {
-  failures.push("Unable to read authoritative announcement data.");
+} catch (error) {
+  failures.push(
+    error instanceof Error
+      ? `Invalid announcement data: ${error.message}`
+      : "Unable to read authoritative announcement data.",
+  );
 }
 
 async function isFile(filePath) {
@@ -84,12 +94,7 @@ await requireRoute("/");
 await requireRoute("/announcements");
 
 for (const announcement of announcements) {
-  if (typeof announcement?.id !== "string" || announcement.id.length === 0) {
-    failures.push("Announcement data contains a record without a valid id.");
-    continue;
-  }
-
-  await requireRoute(`/announcements/${encodeURIComponent(announcement.id)}`);
+  await requireRoute(getAnnouncementPath(announcement.id));
 
   const documentHref = announcement.document?.href;
   if (typeof documentHref === "string" && documentHref.startsWith("/")) {

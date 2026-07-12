@@ -1,8 +1,17 @@
 import announcementData from "@/data/announcements.json";
-import type { Announcement } from "@/types/announcement";
-import { compareISODateOnlyDescending } from "@/utils/formatDate";
+import {
+  isValidAnnouncementId,
+  validateAnnouncements,
+} from "@/lib/announcement-contract";
+import {
+  compareISODateOnlyDescending,
+  isValidISODateOnly,
+} from "@/utils/formatDate";
 
-export const announcements: Announcement[] = announcementData;
+export const announcements = validateAnnouncements(
+  announcementData,
+  isValidISODateOnly,
+);
 
 function compareText(a: string, b: string): number {
   if (a === b) {
@@ -21,5 +30,9 @@ export function getAnnouncements() {
 }
 
 export function getAnnouncementById(id: string) {
+  if (!isValidAnnouncementId(id)) {
+    return null;
+  }
+
   return announcements.find((announcement) => announcement.id === id) ?? null;
 }

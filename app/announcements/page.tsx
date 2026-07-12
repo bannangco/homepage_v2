@@ -1,18 +1,29 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { getAnnouncementPath } from "@/lib/announcement-contract";
 import { getAnnouncements } from "@/lib/announcements";
+import {
+  createSocialMetadata,
+  LEGAL_NOTICE_DESCRIPTION,
+  LEGAL_NOTICE_TITLE,
+} from "@/lib/site-metadata";
 import {
   formatDateYYYYMMDD,
   isValidISODateOnly,
 } from "@/utils/formatDate";
 
 export const metadata: Metadata = {
-  title: "전자공고·법적 고지 - 반낭코",
-  description: "주식회사 반낭코의 전자공고 및 법적 고지입니다.",
+  title: LEGAL_NOTICE_TITLE,
+  description: LEGAL_NOTICE_DESCRIPTION,
   alternates: {
     canonical: "/announcements",
   },
+  ...createSocialMetadata(
+    LEGAL_NOTICE_TITLE,
+    LEGAL_NOTICE_DESCRIPTION,
+    "/announcements",
+  ),
 };
 
 export default function AnnouncementsPage() {
@@ -40,7 +51,7 @@ export default function AnnouncementsPage() {
           {announcements.map((announcement) => (
             <Link
               key={announcement.id}
-              href={`/announcements/${encodeURIComponent(announcement.id)}`}
+              href={getAnnouncementPath(announcement.id)}
               className="group grid gap-4 py-8 transition md:grid-cols-[10rem_1fr_auto]"
             >
               <time

@@ -8,10 +8,11 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "lint": "eslint . --max-warnings=0",
-    "typecheck": "tsc --noEmit",
-    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/date-only.test.mjs",
+    "typegen": "next typegen",
+    "typecheck": "npm run typegen && tsc --noEmit",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/date-only.test.mjs tests/announcement-contract.test.mjs",
     "build": "next build",
-    "check:static": "node scripts/check-static-export.mjs",
+    "check:static": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-static-export.mjs",
     "preview": "serve out"
   },
   "dependencies": {

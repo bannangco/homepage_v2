@@ -2,7 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { getAnnouncementPath } from "@/lib/announcement-contract";
 import { announcements, getAnnouncementById } from "@/lib/announcements";
+import {
+  createSocialMetadata,
+  LEGAL_NOTICE_DESCRIPTION,
+  LEGAL_NOTICE_TITLE,
+} from "@/lib/site-metadata";
 import {
   formatDateYYYYMMDD,
   isValidISODateOnly,
@@ -20,19 +26,35 @@ export async function generateMetadata({ params }: AnnouncementDetailPageProps):
 
   if (!announcement) {
     return {
-      title: "전자공고·법적 고지 - 반낭코",
+      title: LEGAL_NOTICE_TITLE,
+      description: LEGAL_NOTICE_DESCRIPTION,
       alternates: {
         canonical: "/announcements",
       },
+      ...createSocialMetadata(
+        LEGAL_NOTICE_TITLE,
+        LEGAL_NOTICE_DESCRIPTION,
+        "/announcements",
+      ),
     };
   }
 
+  const title = `${announcement.title} - 전자공고·법적 고지 - 반낭코`;
+  const description = announcement.summary;
+  const announcementPath = getAnnouncementPath(announcement.id);
+
   return {
-    title: `${announcement.title} - 전자공고·법적 고지 - 반낭코`,
-    description: (announcement.content ?? announcement.summary).slice(0, 120),
+    title,
+    description,
     alternates: {
-      canonical: `/announcements/${encodeURIComponent(announcement.id)}`,
+      canonical: announcementPath,
     },
+    ...createSocialMetadata(
+      title,
+      description,
+      announcementPath,
+      "article",
+    ),
   };
 }
 

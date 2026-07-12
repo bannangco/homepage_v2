@@ -6,6 +6,14 @@ import localFont from "next/font/local";
 
 import Footer from "@/components/ui/footer";
 import Header from "@/components/ui/header";
+import {
+  createSocialMetadata,
+  SITE_URL,
+} from "@/lib/site-metadata";
+
+const HOME_TITLE = "Bannangco - 주식회사 반낭코";
+const HOME_DESCRIPTION =
+  "반낭코는 문화 서비스, 커뮤니티, 예약과 발견의 경험을 온라인 기술로 더 즐겁게 만드는 Korean culture-tech startup입니다.";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -41,32 +49,10 @@ const nacelle = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Bannangco - 주식회사 반낭코",
-  description:
-    "반낭코는 문화 서비스, 커뮤니티, 예약과 발견의 경험을 온라인 기술로 더 즐겁게 만드는 Korean culture-tech startup입니다.",
-  metadataBase: new URL("https://bannangco.com"),
-  openGraph: {
-    title: "Bannangco - 주식회사 반낭코",
-    description:
-      "반낭코는 문화 서비스, 커뮤니티, 예약과 발견의 경험을 온라인 기술로 더 즐겁게 만드는 Korean culture-tech startup입니다.",
-    type: "website",
-    url: "https://bannangco.com",
-    images: [
-      {
-        url: "/images/ogimage.png",
-        width: 1200,
-        height: 630,
-        alt: "Bannangco - 주식회사 반낭코",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Bannangco - 주식회사 반낭코",
-    description:
-      "반낭코는 문화 서비스, 커뮤니티, 예약과 발견의 경험을 온라인 기술로 더 즐겁게 만드는 Korean culture-tech startup입니다.",
-    images: ["/images/ogimage.png"],
-  },
+  title: HOME_TITLE,
+  description: HOME_DESCRIPTION,
+  metadataBase: new URL(SITE_URL),
+  ...createSocialMetadata(HOME_TITLE, HOME_DESCRIPTION, SITE_URL),
   other: {
     "naver-site-verification": "a75309cf6a38af2e26f52da0166fdf92baf2e951",
   },
