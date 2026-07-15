@@ -3,7 +3,11 @@ import logo from "@/public/images/logo.svg";
 
 import StaticImage from "./static-image";
 
-export default function Logo() {
+type LogoProps = {
+  priority?: boolean;
+};
+
+export default function Logo({ priority = false }: LogoProps) {
   return (
     <Link
       href="/"
@@ -13,6 +17,7 @@ export default function Logo() {
       <StaticImage
         src={logo}
         alt=""
+        priority={priority}
         className="h-10 w-auto shrink-0"
       />
       <span className="font-nacelle text-sm font-semibold tracking-[0.08em] sm:text-base">

@@ -192,6 +192,18 @@ if (homepageHtml) {
     }
   }
 
+  const unverifiedLocationPatterns = [
+    /\bSEO(?:UL)\b/i,
+    /37[.]56(?:65)/,
+  ];
+  for (const pattern of unverifiedLocationPatterns) {
+    if (pattern.test(homepageHtml)) {
+      failures.push(
+        "out/index.html contains unverified geographic information.",
+      );
+    }
+  }
+
   const visibleText = getVisibleDocumentText(homepageHtml);
   let musePickerIndex = visibleText.indexOf("MusePicker");
   while (musePickerIndex !== -1) {

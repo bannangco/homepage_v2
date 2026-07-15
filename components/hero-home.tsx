@@ -27,9 +27,12 @@ export default function HeroHome() {
           <p className="font-mono text-[0.6875rem] uppercase tracking-[0.18em] text-ivory/60 sm:text-xs">
             BNCO / Cultural Signal System
           </p>
-          <div className="hidden items-start gap-3 text-right font-mono text-xs uppercase tracking-[0.16em] text-ivory/50 lg:flex">
-            <span>SEOUL</span>
-            <span aria-hidden="true">37.5665° N</span>
+          <div
+            aria-hidden="true"
+            className="hidden items-start gap-3 text-right font-mono text-xs uppercase tracking-[0.16em] text-ivory/50 lg:flex"
+          >
+            <span>CULTURE / TECHNOLOGY</span>
+            <span>SIGNAL / 01</span>
           </div>
         </div>
 
@@ -62,6 +65,7 @@ export default function HeroHome() {
             <StaticImage
               src={BannangcoLogo}
               alt="반낭코 공식 심볼"
+              priority
               className="h-auto w-[3.9rem] sm:w-[5rem] lg:w-[11rem]"
             />
           </div>

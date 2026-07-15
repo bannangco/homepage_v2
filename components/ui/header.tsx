@@ -41,7 +41,7 @@ export default function Header() {
       <div className="mx-auto max-w-[90rem] px-4 sm:px-6 lg:px-8">
         <div className="flex h-[4.5rem] items-center justify-between gap-4">
           <div className="flex min-w-0 flex-1 items-center gap-5">
-            <Logo />
+            <Logo priority />
             <span
               className="hidden border-l border-border pl-5 font-mono text-[0.6875rem] uppercase tracking-[0.18em] text-ivory-muted lg:block"
               aria-hidden="true"

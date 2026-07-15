@@ -100,11 +100,17 @@ export default function ServicesArchive() {
                   </p>
 
                   {service.metrics.length > 0 ? (
-                    <dl className="mt-8 grid grid-cols-2 border-y border-border sm:grid-cols-3">
+                    <dl
+                      className={`mt-8 grid grid-cols-1 divide-y divide-border border-y border-border sm:divide-y-0 ${
+                        service.metrics.length === 1
+                          ? "sm:grid-cols-1"
+                          : "sm:grid-cols-3"
+                      }`}
+                    >
                       {service.metrics.map((metric) => (
                         <div
                           key={metric.id}
-                          className="border-r border-border px-3 py-4 first:pl-0 last:border-r-0 sm:px-4"
+                          className="py-4 sm:border-r sm:border-border sm:px-4 sm:first:pl-0 sm:last:border-r-0"
                         >
                           <dt className="text-xs text-ink-muted">
                             {metric.label}
