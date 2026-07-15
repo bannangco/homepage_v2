@@ -31,22 +31,20 @@ body {
 
 .signal-grid {
   background-image:
-    linear-gradient(rgb(var(--color-grid) / 0.42) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(var(--color-grid) / 0.42) 1px, transparent 1px);
-  background-size: 32px 32px;
+    linear-gradient(rgb(var(--color-grid) / 0.32) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--color-grid) / 0.32) 1px, transparent 1px);
+  background-size: 40px 40px;
 }
 
-.signal-grid-light {
-  background-image:
-    linear-gradient(rgb(var(--color-border) / 0.32) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(var(--color-border) / 0.32) 1px, transparent 1px);
-  background-size: 32px 32px;
+.section-reveal {
+  opacity: 1;
+  transform: none;
 }
 
 @keyframes heroRise {
   from {
-    opacity: 0;
-    transform: translateY(24px);
+    opacity: 0.72;
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -54,31 +52,109 @@ body {
   }
 }
 
-@keyframes signalTravel {
+@keyframes culturalSignalFlow {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -100;
+  }
+}
+
+@keyframes culturalSignalPulse {
   0%,
   100% {
-    transform: translateX(-12%);
+    opacity: 0.55;
+    transform: scale(0.86);
   }
-  50% {
-    transform: translateX(12%);
+  48% {
+    opacity: 1;
+    transform: scale(1.45);
+  }
+}
+
+@keyframes sectionReveal {
+  from {
+    opacity: 0.78;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes headerProgress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes archiveBodyIn {
+  from {
+    opacity: 0.76;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .hero-enter-1 {
-    animation: heroRise 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: heroRise 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
   .hero-enter-2 {
-    animation: heroRise 760ms 100ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: heroRise 650ms 80ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
   .hero-enter-3 {
-    animation: heroRise 820ms 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: heroRise 680ms 150ms cubic-bezier(0.16, 1, 0.3, 1) both;
   }
 
-  .signal-line-motion {
-    animation: signalTravel 12s ease-in-out infinite;
+  .cultural-signal-flow-path {
+    animation: culturalSignalFlow 12s linear infinite;
+  }
+
+  .cultural-signal-pulse-node {
+    animation: culturalSignalPulse 3.4s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  details[open] .archive-body {
+    animation: archiveBodyIn 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@media (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .cultural-signal-field__plane {
+    will-change: transform;
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .header-scroll-progress {
+      animation: headerProgress linear both;
+      animation-timeline: scroll(root block);
+      animation-range: 0% 100%;
+    }
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .section-reveal {
+      animation: sectionReveal 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation-timeline: view();
+      animation-range: entry 4% entry 32%;
+    }
   }
 }
 
@@ -95,7 +171,22 @@ body {
     transition-duration: 0.01ms !important;
   }
 
-  .signal-line-motion {
+  .cultural-signal-field__plane,
+  .section-reveal {
+    animation: none !important;
+    opacity: 1 !important;
     transform: none !important;
+    transition: none !important;
+  }
+
+  .cultural-signal-flow-path,
+  .cultural-signal-pulse-node,
+  .header-scroll-progress,
+  .archive-body {
+    animation: none !important;
+  }
+
+  .header-scroll-progress {
+    transform: scaleX(0) !important;
   }
 }

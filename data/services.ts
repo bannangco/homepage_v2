@@ -310,3 +310,12 @@ export const serviceCatalog = [
 ] as const satisfies readonly ServiceCatalogEntry[];
 
 validateServiceCatalog(serviceCatalog);
+
+export const preparingServices: readonly ServiceCatalogEntry[] =
+  serviceCatalog.filter((service) => service.status === "preparing");
+
+export const renewingServices: readonly ServiceCatalogEntry[] =
+  serviceCatalog.filter((service) => service.status === "renewing");
+
+export const endedServices: readonly ServiceCatalogEntry[] =
+  serviceCatalog.filter((service) => service.status === "ended");

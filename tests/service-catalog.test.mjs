@@ -3,6 +3,9 @@ import { access } from "node:fs/promises";
 import { test } from "node:test";
 
 import {
+  endedServices,
+  preparingServices,
+  renewingServices,
   SERVICE_STATUSES,
   serviceCatalog,
   validateServiceCatalog,
@@ -44,6 +47,51 @@ test("uses only supported statuses and preserves the verified status map", () =>
       meetinggo: "ended",
     },
   );
+});
+
+test("derives disjoint lifecycle groups from the authoritative catalog", () => {
+  const groups = [preparingServices, renewingServices, endedServices];
+  const groupedServices = groups.flat();
+  const groupedIds = groupedServices.map((service) => service.id);
+  const catalogIds = serviceCatalog.map((service) => service.id);
+
+  assert.deepEqual(
+    preparingServices.map((service) => service.id),
+    ["musepicker"],
+  );
+  assert.deepEqual(
+    renewingServices.map((service) => service.id),
+    ["splash"],
+  );
+  assert.deepEqual(
+    endedServices.map((service) => service.id),
+    ["friending", "meetinggo"],
+  );
+
+  assert.equal(
+    preparingServices.every((service) => service.status === "preparing"),
+    true,
+  );
+  assert.equal(
+    renewingServices.every((service) => service.status === "renewing"),
+    true,
+  );
+  assert.equal(
+    endedServices.every((service) => service.status === "ended"),
+    true,
+  );
+
+  assert.equal(groupedServices.length, serviceCatalog.length);
+  assert.equal(new Set(groupedIds).size, groupedIds.length);
+  assert.deepEqual(groupedIds.toSorted(), catalogIds.toSorted());
+
+  for (const service of serviceCatalog) {
+    assert.equal(
+      groupedServices.filter((candidate) => candidate === service).length,
+      1,
+      `Service ${service.id} must be derived exactly once without cloning.`,
+    );
+  }
 });
 
 test("keeps MusePicker as an unlaunched temporary typography treatment", () => {

@@ -6,8 +6,9 @@ import { useEffect, useRef, useState } from "react";
 import Logo from "./logo";
 
 const navigationItems = [
-  { href: "/#company", label: "회사" },
+  { href: "/#about", label: "회사" },
   { href: "/#services", label: "서비스" },
+  { href: "/#archive", label: "아카이브" },
 ] as const;
 
 const navigationLinkClassName =
@@ -36,18 +37,12 @@ export default function Header() {
   return (
     <header
       id="site-header"
-      className="fixed inset-x-0 top-0 z-50 w-full border-b border-border bg-ink/95 text-ivory backdrop-blur-md"
+      className="fixed inset-x-0 top-0 z-50 w-full border-b border-border bg-ink text-ivory"
     >
-      <div className="mx-auto max-w-[90rem] px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[80rem] px-4 sm:px-6 lg:px-8">
         <div className="flex h-[4.5rem] items-center justify-between gap-4">
-          <div className="flex min-w-0 flex-1 items-center gap-5">
+          <div className="flex min-w-0 flex-1 items-center">
             <Logo priority />
-            <span
-              className="hidden border-l border-border pl-5 font-mono text-[0.6875rem] uppercase tracking-[0.18em] text-ivory-muted lg:block"
-              aria-hidden="true"
-            >
-              BNCO / Cultural signal
-            </span>
           </div>
 
           <nav aria-label="주요 메뉴" className="hidden sm:block">
@@ -173,6 +168,10 @@ export default function Header() {
           </nav>
         </noscript>
       </div>
+      <span
+        aria-hidden="true"
+        className="header-scroll-progress pointer-events-none absolute inset-x-0 bottom-0 h-[2px] origin-left scale-x-0 bg-signal motion-reduce:hidden"
+      />
     </header>
   );
 }

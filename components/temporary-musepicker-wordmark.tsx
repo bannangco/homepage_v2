@@ -8,9 +8,9 @@ export default function TemporaryMusePickerWordmark({
   return (
     <div
       aria-hidden="true"
-      className="flex w-full max-w-[34rem] flex-col justify-center"
+      className="flex w-full max-w-[28rem] flex-col justify-center"
     >
-      <span className="break-words font-nacelle text-[clamp(2.75rem,14vw,6.5rem)] font-semibold leading-none tracking-[-0.065em] text-ivory">
+      <span className="break-words font-nacelle text-[clamp(2.5rem,10vw,5rem)] font-semibold leading-none tracking-[-0.06em] text-ivory">
         {text}
       </span>
       <span className="mt-4 flex items-center gap-3">
