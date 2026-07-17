@@ -8,7 +8,7 @@ export default function HeroHome() {
       data-hero-pointer-zone
       className="relative overflow-hidden bg-ink text-ivory"
     >
-      <div className="relative mx-auto grid min-h-[36rem] w-full max-w-[80rem] items-center gap-8 px-5 pb-10 pt-28 sm:min-h-[40rem] sm:px-8 sm:pb-10 sm:pt-24 lg:min-h-[45rem] lg:grid-cols-[minmax(0,1.06fr)_minmax(22rem,0.94fr)] lg:gap-16 lg:px-12 lg:py-28">
+      <div className="hero-home-layout relative mx-auto grid min-h-[36rem] w-full max-w-[80rem] items-center gap-8 px-5 pb-10 pt-28 sm:min-h-[40rem] sm:px-8 sm:pb-10 sm:pt-24 lg:min-h-[45rem] lg:grid-cols-[minmax(0,1.06fr)_minmax(22rem,0.94fr)] lg:gap-16 lg:px-12 lg:py-28">
         <div className="relative z-10 min-w-0">
           <p className="hero-enter-1 mb-5 font-mono text-xs font-semibold tracking-[-0.01em] text-signal sm:mb-6 sm:text-sm">
             {"/* 한층 더 즐거운 세상을 위해 */"}

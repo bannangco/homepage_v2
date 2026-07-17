@@ -104,18 +104,20 @@ function textFromHtmlFragment(html) {
     .trim();
 }
 
-function hasAccessibleMusePickerHeading(html) {
+function countAccessibleMusePickerHeadings(html) {
+  let count = 0;
+
   for (const match of html.matchAll(/<h([1-6])\b([^>]*)>([\s\S]*?)<\/h\1>/gi)) {
     const [, , attributes, content] = match;
     if (/\baria-hidden\s*=\s*["']true["']/i.test(attributes)) {
       continue;
     }
-    if (textFromHtmlFragment(content).includes("MusePicker")) {
-      return true;
+    if (textFromHtmlFragment(content) === "MusePicker") {
+      count += 1;
     }
   }
 
-  return false;
+  return count;
 }
 
 function getVisibleDocumentText(html) {
@@ -256,9 +258,11 @@ try {
 }
 
 if (homepageHtml) {
-  if (!hasAccessibleMusePickerHeading(homepageHtml)) {
+  const accessibleMusePickerHeadingCount =
+    countAccessibleMusePickerHeadings(homepageHtml);
+  if (accessibleMusePickerHeadingCount !== 1) {
     failures.push(
-      "out/index.html does not contain an accessible MusePicker heading.",
+      `out/index.html must contain exactly one accessible MusePicker heading (received: ${accessibleMusePickerHeadingCount}).`,
     );
   }
 
@@ -324,6 +328,7 @@ if (homepageHtml) {
     if (serviceStartTags.length !== 1) continue;
 
     const [serviceStartTag] = serviceStartTags;
+    const serviceElement = getMatchingElement(homepageHtml, serviceStartTag);
     const presentationKind = getLiteralAttribute(
       serviceStartTag.html,
       "data-presentation-kind",
@@ -337,6 +342,93 @@ if (homepageHtml) {
       failures.push(
         `The ${service.id} service marker must preserve presentation kind ${service.presentation.kind} and official=${String(service.presentation.official)}.`,
       );
+    }
+
+    if (!serviceElement) {
+      failures.push(`Unable to inspect the ${service.id} service markup.`);
+      continue;
+    }
+
+    if (service.id === "musepicker") {
+      const visibleMusePickerCount =
+        getVisibleDocumentText(serviceElement.fragment).match(/MusePicker/g)
+          ?.length ?? 0;
+
+      if (visibleMusePickerCount !== 1) {
+        failures.push(
+          `The MusePicker service must render its name exactly once (received: ${visibleMusePickerCount}).`,
+        );
+      }
+
+      if (getLiteralAttribute(serviceStartTag.html, "tabindex") !== null) {
+        failures.push(
+          "The noninteractive MusePicker article must not be in the tab order.",
+        );
+      }
+    }
+
+    if (service.presentation.kind === "image") {
+      const renderedLogoSources = getLiteralStartTags(
+        serviceElement.fragment,
+      ).flatMap((startTag) => {
+        if (startTag.tagName !== "img") return [];
+        const src = getLiteralAttribute(startTag.html, "src");
+        return src === null ? [] : [src];
+      });
+
+      if (
+        renderedLogoSources.filter(
+          (src) => src === service.presentation.src,
+        ).length !== 1
+      ) {
+        failures.push(
+          `The ${service.id} service must render its configured logo source exactly once.`,
+        );
+      }
+    }
+
+    if (service.status === "ended") {
+      const expectedLabelId = `service-${service.id}`;
+      const summaryStartTags = getLiteralStartTags(
+        serviceElement.fragment,
+      ).filter((startTag) => startTag.tagName === "summary");
+      const summaryElement =
+        summaryStartTags.length === 1
+          ? getMatchingElement(serviceElement.fragment, summaryStartTags[0])
+          : null;
+
+      if (
+        serviceStartTag.tagName !== "details" ||
+        getLiteralAttribute(serviceStartTag.html, "aria-labelledby") !==
+          expectedLabelId
+      ) {
+        failures.push(
+          `The ${service.id} archive details must be labelled by ${expectedLabelId}.`,
+        );
+      }
+
+      if (!summaryElement) {
+        failures.push(
+          `The ${service.id} archive entry must contain exactly one native summary.`,
+        );
+      } else {
+        if (
+          getLiteralStartTags(summaryElement.fragment).filter(
+            (startTag) =>
+              getLiteralAttribute(startTag.html, "id") === expectedLabelId,
+          ).length !== 1
+        ) {
+          failures.push(
+            `The ${service.id} summary must contain its accessible label target.`,
+          );
+        }
+
+        if (/<(?:article|div|dl|h[1-6]|ol|p|section|ul)\b/i.test(summaryElement.fragment)) {
+          failures.push(
+            `The ${service.id} summary must use phrasing-content structure.`,
+          );
+        }
+      }
     }
   }
 

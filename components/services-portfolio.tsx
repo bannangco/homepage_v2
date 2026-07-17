@@ -7,6 +7,18 @@ import {
 } from "@/data/services";
 import type { ServiceCatalogEntry, ServicePresentation } from "@/data/services";
 
+const serviceLogoDisplayScale = {
+  splash: "scale-[1.6] sm:scale-[1.9]",
+  friending: "scale-[1.9]",
+  meetinggo: "scale-[2]",
+} as const;
+
+function getServiceLogoDisplayScale(serviceId: ServiceCatalogEntry["id"]) {
+  return serviceLogoDisplayScale[
+    serviceId as keyof typeof serviceLogoDisplayScale
+  ] ?? "";
+}
+
 function ServicePresentationAsset({
   presentation,
   imageClassName,
@@ -16,9 +28,7 @@ function ServicePresentationAsset({
   imageClassName: string;
   decorative?: boolean;
 }) {
-  if (presentation.kind === "temporary-wordmark") {
-    return <TemporaryMusePickerWordmark text={presentation.text} />;
-  }
+  if (presentation.kind === "temporary-wordmark") return null;
 
   return (
     <StaticImage
@@ -28,6 +38,26 @@ function ServicePresentationAsset({
       height={presentation.height}
       className={imageClassName}
     />
+  );
+}
+
+function PreparingServiceHeading({ service }: { service: ServiceCatalogEntry }) {
+  if (service.presentation.kind === "temporary-wordmark") {
+    return (
+      <TemporaryMusePickerWordmark
+        headingId={`service-${service.id}`}
+        text={service.presentation.text}
+      />
+    );
+  }
+
+  return (
+    <h4
+      id={`service-${service.id}`}
+      className="break-words font-nacelle text-4xl font-semibold tracking-[-0.045em] sm:text-5xl"
+    >
+      {service.name}
+    </h4>
   );
 }
 
@@ -42,7 +72,7 @@ function serviceDataAttributes(service: ServiceCatalogEntry) {
 export default function ServicesPortfolio() {
   return (
     <section id="services" aria-labelledby="services-title" className="bg-ivory">
-      <div className="px-5 py-20 sm:px-8 sm:py-24 lg:px-12">
+      <div className="px-5 py-16 sm:px-8 sm:py-20 lg:px-12">
         <div className="section-reveal mx-auto grid max-w-[80rem] gap-8 border-t border-border pt-5 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-16">
           <p className="text-sm font-semibold text-ink-muted">
             Services / Portfolio
@@ -66,7 +96,7 @@ export default function ServicesPortfolio() {
         id="preparing"
         data-service-group="preparing"
         aria-labelledby="preparing-title"
-        className="bg-ink px-5 py-16 text-ivory sm:px-8 sm:py-20 lg:px-12 lg:py-24"
+        className="bg-ink px-5 py-14 text-ivory sm:px-8 sm:py-16 lg:px-12 lg:pb-16 lg:pt-20"
       >
         <div className="section-reveal mx-auto max-w-[80rem]">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -87,47 +117,44 @@ export default function ServicesPortfolio() {
               <article
                 key={service.id}
                 aria-labelledby={`service-${service.id}`}
-                tabIndex={0}
                 {...serviceDataAttributes(service)}
-                className="group grid overflow-hidden border border-grid bg-surface-dark outline-none transition duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:-translate-y-0.5 hover:border-signal/70 focus-visible:-translate-y-0.5 focus-visible:border-signal focus-visible:ring-2 focus-visible:ring-signal focus-within:-translate-y-0.5 focus-within:border-signal motion-reduce:transform-none motion-reduce:transition-none lg:grid-cols-[minmax(0,1fr)_minmax(20rem,0.75fr)]"
+                className={`group relative overflow-hidden border border-grid bg-surface-dark transition duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:-translate-y-0.5 hover:border-signal/70 motion-reduce:transform-none motion-reduce:transition-none ${service.presentation.kind === "image" ? "grid lg:grid-cols-[minmax(0,1fr)_18rem]" : ""}`}
               >
-                <div className="flex flex-col justify-between p-6 sm:p-8 lg:p-10">
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -right-12 top-1/2 hidden h-52 w-52 -translate-y-1/2 rounded-full border border-signal/25 transition-transform duration-200 ease-[cubic-bezier(.16,1,.3,1)] group-hover:scale-[1.02] motion-reduce:transform-none motion-reduce:transition-none lg:block"
+                />
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute right-0 top-1/2 hidden h-px w-72 bg-gradient-to-r from-transparent via-signal/45 to-transparent lg:block"
+                />
+
+                <div className="relative flex max-w-3xl flex-col justify-between p-6 sm:p-8 lg:p-10">
                   <div>
                     <span className="inline-flex min-h-8 items-center bg-signal px-3 text-sm font-semibold text-ink">
                       {service.statusLabel}
                     </span>
-                    <h4
-                      id={`service-${service.id}`}
-                      className="mt-6 break-words font-nacelle text-4xl font-semibold tracking-[-0.045em] sm:text-5xl"
-                    >
-                      {service.name}
-                    </h4>
+                    <div className="mt-6">
+                      <PreparingServiceHeading service={service} />
+                    </div>
                     <p className="mt-5 max-w-xl break-keep text-lg leading-8 text-ivory/70">
                       {service.description}
                     </p>
                   </div>
-                  <p className="mt-8 max-w-lg text-sm leading-6 text-ivory/50">
+                  <p className="mt-6 max-w-lg text-sm leading-6 text-ivory/50">
                     출시를 준비하는 단계로, 공개 운영 이력과 외부 링크는
                     아직 없습니다.
                   </p>
                 </div>
 
-                <div className="relative flex min-h-[11rem] items-center justify-center overflow-hidden border-t border-grid bg-ink p-6 sm:min-h-[13rem] sm:p-8 lg:h-[15rem] lg:min-h-0 lg:self-center lg:border-y lg:border-l">
-                  <span
-                    aria-hidden="true"
-                    className="absolute h-40 w-40 rounded-full border border-signal/30 transition-transform duration-200 ease-[cubic-bezier(.16,1,.3,1)] group-hover:scale-[1.02] group-focus-within:scale-[1.02] motion-reduce:transition-none"
-                  />
-                  <span
-                    aria-hidden="true"
-                    className="absolute inset-x-8 top-1/2 h-px bg-gradient-to-r from-transparent via-signal/50 to-transparent"
-                  />
-                  <div className="relative w-full max-w-md">
+                {service.presentation.kind === "image" ? (
+                  <div className="relative flex min-h-44 items-center justify-center overflow-hidden border-t border-grid bg-ink p-6 lg:min-h-full lg:border-l lg:border-t-0">
                     <ServicePresentationAsset
                       presentation={service.presentation}
                       imageClassName="h-auto max-h-40 w-auto max-w-full object-contain"
                     />
                   </div>
-                </div>
+                ) : null}
               </article>
             ))}
           </div>
@@ -138,7 +165,7 @@ export default function ServicesPortfolio() {
         id="renewing"
         data-service-group="renewing"
         aria-labelledby="renewing-title"
-        className="bg-ivory px-5 py-16 text-ink sm:px-8 sm:py-20 lg:px-12 lg:py-24"
+        className="bg-ivory px-5 py-14 text-ink sm:px-8 sm:py-16 lg:px-12 lg:py-20"
       >
         <div className="section-reveal mx-auto max-w-[80rem]">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -162,14 +189,14 @@ export default function ServicesPortfolio() {
                 {...serviceDataAttributes(service)}
                 className="group grid overflow-hidden border border-border bg-surface-light transition duration-200 ease-[cubic-bezier(.16,1,.3,1)] hover:-translate-y-0.5 hover:border-ink/60 focus-within:-translate-y-0.5 focus-within:border-ink motion-reduce:transform-none motion-reduce:transition-none lg:grid-cols-[17rem_minmax(0,1fr)]"
               >
-                <div className="relative flex min-h-[12rem] items-center justify-center overflow-hidden border-b border-border bg-ivory-muted/55 p-6 lg:min-h-full lg:border-b-0 lg:border-r">
+                <div className="relative flex min-h-[12rem] items-center justify-center overflow-hidden border-b border-border bg-surface-dark p-6 lg:min-h-full lg:border-b-0 lg:border-r">
                   <span
                     aria-hidden="true"
                     className="absolute inset-x-5 top-1/3 h-px bg-ink/10 transition-transform duration-500 group-hover:translate-y-2 group-focus-within:translate-y-2 motion-reduce:transition-none"
                   />
                   <ServicePresentationAsset
                     presentation={service.presentation}
-                    imageClassName="relative h-auto max-h-36 w-auto max-w-[13rem] object-contain transition-transform duration-200 ease-[cubic-bezier(.16,1,.3,1)] group-hover:scale-[1.02] group-focus-within:scale-[1.02] motion-reduce:transform-none motion-reduce:transition-none"
+                    imageClassName={`relative h-auto max-h-36 w-auto max-w-[13rem] object-contain ${getServiceLogoDisplayScale(service.id)}`}
                   />
                 </div>
 
@@ -244,7 +271,7 @@ export default function ServicesPortfolio() {
         id="archive"
         data-service-group="archive"
         aria-labelledby="archive-title"
-        className="bg-ivory-muted/70 px-5 py-16 text-ink sm:px-8 sm:py-20 lg:px-12 lg:py-24"
+        className="bg-ivory-muted/70 px-5 py-14 text-ink sm:px-8 sm:py-16 lg:px-12 lg:py-20"
       >
         <div className="section-reveal mx-auto max-w-[80rem]">
           <div className="grid gap-5 border-b border-border pb-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
@@ -266,24 +293,25 @@ export default function ServicesPortfolio() {
             {endedServices.map((service) => (
               <details
                 key={service.id}
+                aria-labelledby={`service-${service.id}`}
                 {...serviceDataAttributes(service)}
                 className="group border-t border-border first:border-t-0 focus-within:bg-surface-light/70"
               >
-                <summary className="archive-summary grid min-h-20 cursor-pointer list-none grid-cols-[3.5rem_minmax(0,1fr)_2.75rem] items-center gap-3 py-4 outline-none transition-colors duration-200 hover:bg-surface-light/70 focus-visible:bg-surface-light focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ink motion-reduce:transition-none [&::-webkit-details-marker]:hidden sm:grid-cols-[4.5rem_minmax(0,1fr)_2.75rem] sm:gap-4 sm:px-4">
-                  <div className="flex h-12 w-14 items-center justify-center overflow-hidden bg-surface-light px-1.5 sm:w-16">
+                <summary className="archive-summary grid min-h-20 cursor-pointer list-none grid-cols-[4.5rem_minmax(0,1fr)_2.75rem] items-center gap-3 py-4 outline-none transition-colors duration-200 hover:bg-surface-light/70 focus-visible:bg-surface-light focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ink motion-reduce:transition-none [&::-webkit-details-marker]:hidden sm:gap-4 sm:px-4">
+                  <span className="flex h-14 w-[4.5rem] items-center justify-center overflow-hidden border border-grid bg-surface-dark">
                     <ServicePresentationAsset
                       presentation={service.presentation}
                       decorative
-                      imageClassName="h-auto max-h-10 w-auto max-w-full object-contain"
+                      imageClassName={`h-auto max-h-10 w-auto max-w-full object-contain ${getServiceLogoDisplayScale(service.id)}`}
                     />
-                  </div>
-                  <div className="min-w-0 sm:grid sm:grid-cols-[minmax(8rem,1fr)_auto_auto] sm:items-center sm:gap-6">
-                    <h4
+                  </span>
+                  <span className="min-w-0 sm:grid sm:grid-cols-[minmax(8rem,1fr)_auto_auto] sm:items-center sm:gap-6">
+                    <span
                       id={`service-${service.id}`}
                       className="font-nacelle text-xl font-semibold tracking-[-0.02em] sm:text-2xl"
                     >
                       {service.name}
-                    </h4>
+                    </span>
                     <span className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 sm:mt-0 sm:contents">
                       <span className="text-xs font-semibold sm:text-sm">
                         {service.statusLabel}
@@ -292,16 +320,25 @@ export default function ServicesPortfolio() {
                         {service.periodLabel}
                       </span>
                     </span>
-                  </div>
+                  </span>
                   <span
                     aria-hidden="true"
-                    className="archive-disclosure flex h-11 w-11 items-center justify-center text-2xl transition-transform duration-200 group-open:rotate-45 motion-reduce:transition-none"
+                    className="archive-disclosure flex h-11 w-11 items-center justify-center transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none"
                   >
-                    +
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.75"
+                      strokeLinecap="square"
+                    >
+                      <path d="m6 9 6 6 6-6" />
+                    </svg>
                   </span>
                 </summary>
 
-                <div className="archive-body grid gap-5 border-t border-border/70 px-0 pb-7 pt-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:px-4">
+                <div className="archive-body grid gap-5 border-t border-border/70 px-3 pb-7 pt-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:px-4">
                   <div>
                     <p className="max-w-2xl break-keep leading-7 text-ink-muted">
                       {service.description}

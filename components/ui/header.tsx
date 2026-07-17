@@ -137,6 +137,7 @@ export default function Header() {
             @media (max-width: 639px) {
               #site-header { position: relative !important; }
               #mobile-menu-button { display: none !important; }
+              #company .hero-home-layout { padding-top: 2.5rem !important; }
             }
           `}</style>
           <nav

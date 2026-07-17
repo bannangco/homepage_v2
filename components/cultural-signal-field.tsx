@@ -124,10 +124,69 @@ export default function CulturalSignalField() {
         }}
       >
         <svg
+          viewBox="0 0 600 180"
+          xmlns="http://www.w3.org/2000/svg"
+          focusable="false"
+          className="absolute left-0 top-1 h-[5.75rem] w-full sm:hidden"
+          fill="none"
+        >
+          <path
+            d="M48 132C126 132 142 82 220 82C304 82 324 40 408 40C482 40 510 84 552 84"
+            stroke="rgb(var(--color-ivory-muted) / 0.34)"
+            strokeWidth="1.2"
+            vectorEffect="non-scaling-stroke"
+          />
+          <path
+            d="M60 38C136 38 158 112 240 112C324 112 350 142 438 142C492 142 520 122 548 122"
+            stroke="rgb(var(--color-ivory-muted) / 0.2)"
+            strokeWidth="1"
+            vectorEffect="non-scaling-stroke"
+          />
+          <path
+            className="cultural-signal-flow-path"
+            d="M48 132C126 132 142 82 220 82C304 82 324 40 408 40C482 40 510 84 552 84"
+            pathLength="100"
+            stroke="rgb(var(--color-signal))"
+            strokeDasharray="13 87"
+            strokeLinecap="round"
+            strokeWidth="2.5"
+            vectorEffect="non-scaling-stroke"
+          />
+
+          <g fill="rgb(var(--color-surface-dark))" strokeWidth="1.5">
+            <circle
+              cx="60"
+              cy="38"
+              r="6"
+              stroke="rgb(var(--color-ivory-muted) / 0.7)"
+            />
+            <circle
+              cx="220"
+              cy="82"
+              r="7"
+              stroke="rgb(var(--color-signal))"
+            />
+            <circle
+              cx="438"
+              cy="142"
+              r="6"
+              stroke="rgb(var(--color-ivory-muted) / 0.7)"
+            />
+          </g>
+          <circle
+            className="cultural-signal-pulse-node"
+            cx="408"
+            cy="40"
+            r="4.5"
+            fill="rgb(var(--color-signal))"
+          />
+        </svg>
+
+        <svg
           viewBox="0 0 560 440"
           xmlns="http://www.w3.org/2000/svg"
           focusable="false"
-          className="absolute left-0 top-1/2 h-auto w-full -translate-y-1/2 sm:static sm:h-full sm:translate-y-0"
+          className="hidden h-full w-full sm:block"
           fill="none"
         >
           <path
