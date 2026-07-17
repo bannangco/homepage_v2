@@ -18,10 +18,10 @@ export default function NotFound() {
           >
             404
           </p>
-          <h1 className="mt-6 max-w-3xl font-nacelle text-4xl font-semibold leading-[1.1] tracking-[-0.035em] text-ink sm:text-5xl lg:text-6xl">
+          <h1 className="mt-6 max-w-3xl break-keep font-nacelle text-4xl font-semibold leading-[1.1] tracking-[-0.035em] text-ink [overflow-wrap:normal] sm:text-5xl lg:text-6xl">
             요청한 신호를 찾을 수 없습니다.
           </h1>
-          <p className="mt-6 max-w-xl text-lg leading-8 text-ink-muted">
+          <p className="mt-6 max-w-xl break-keep text-lg leading-8 text-ink-muted [overflow-wrap:normal]">
             주소가 변경되었거나 존재하지 않는 페이지입니다. 반낭코의 홈에서
             다시 탐색해 주세요.
           </p>

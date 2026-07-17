@@ -47,14 +47,18 @@ npm run preview
 
 ## Legal notice content
 
-전자공고·법적 고지 데이터는 `data/announcements.json`에서 관리하며, `lib/announcements.ts`가 정렬과 조회를 담당합니다.
+`/announcements`는 회사 정보, 전자공고, 법적 문서를 한 페이지에서 구분해 제공합니다. 각 정보는 다음 source-controlled 데이터에서 관리합니다.
 
-- 실제 문서와 정확한 날짜가 확인된 항목만 추가합니다.
-- `id`는 소문자 영문·숫자·하이픈만 사용하는 URL-safe slug여야 하며 중복할 수 없습니다.
-- 첨부 문서는 `public/` 아래의 검증된 정적 파일을 선택적 `document` 필드로 연결합니다.
-- 목록과 상세 페이지는 같은 소스 데이터에서 정적으로 생성됩니다.
-- 등록된 문서가 없는 상태도 정상적인 공개 상태입니다.
+- 회사 정보와 Organization JSON-LD는 `lib/company-profile.ts`의 확인된 값만 사용합니다.
+- 전자공고는 `data/announcements.json`에만 기록합니다. 목록, 상세 metadata, sitemap과 정적 상세 경로가 같은 검증 데이터를 사용합니다.
+- 정관과 같은 독립 법적 문서는 `data/legal-documents.json`에만 기록하며 전자공고 record로 만들지 않습니다.
+- 실제 공고나 공개 승인된 법적 문서가 없으면 두 배열은 `[]`을 유지합니다. 빈 배열은 정상적인 공개 상태이며 가짜 record나 sentinel route를 만들지 않습니다.
+- 모든 `id`는 소문자 영문·숫자·하이픈으로 구성된 중복 없는 URL-safe slug입니다.
+- PDF는 개인정보 및 공개 승인 여부를 검토한 원본만 `public/legal/` 아래에 lowercase ASCII 파일명으로 추가합니다. 데이터에는 `/legal/...pdf` 형식의 안전한 root-relative 경로만 선언할 수 있습니다.
+- 법적 문서의 `kind`는 명시된 allowlist를 사용하고, `date`는 authoritative date가 확인된 경우에만 선택적으로 기록합니다. 파일명, mtime, 빌드 시각이나 법인 설립일에서 문서 날짜를 만들지 않습니다.
 - 브라우저 기반 작성 기능, 업로드 API, CMS는 사용하지 않습니다.
+
+Organization JSON-LD는 확인된 법인명, 브랜드명, 사이트 URL, 공식 로고, 설립일, 이메일 및 공식 GitHub·LinkedIn URL만 포함합니다. 주소, 전화번호, 대표자, 등록번호나 추정 정보는 포함하지 않습니다.
 
 ## Service catalog and MusePicker treatment
 

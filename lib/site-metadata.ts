@@ -11,7 +11,7 @@ export const SITE_OG_IMAGE = {
 
 export const LEGAL_NOTICE_TITLE = "전자공고·법적 고지 - 반낭코";
 export const LEGAL_NOTICE_DESCRIPTION =
-  "주식회사 반낭코의 전자공고 및 법적 고지입니다.";
+  "주식회사 반낭코의 회사 정보, 전자공고 및 공개 법적 문서입니다.";
 
 export function createSocialMetadata(
   title: string,

@@ -7,6 +7,10 @@ import localFont from "next/font/local";
 import Footer from "@/components/ui/footer";
 import Header from "@/components/ui/header";
 import {
+  ORGANIZATION_JSON_LD,
+  serializeJsonLd,
+} from "@/lib/company-profile";
+import {
   createSocialMetadata,
   SITE_URL,
 } from "@/lib/site-metadata";
@@ -65,6 +69,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: serializeJsonLd(ORGANIZATION_JSON_LD),
+          }}
+        />
+      </head>
       <body
         className={`${inter.variable} ${nacelle.variable} bg-ivory font-inter text-base text-ink antialiased`}
       >

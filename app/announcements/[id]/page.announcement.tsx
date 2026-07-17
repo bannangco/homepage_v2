@@ -121,6 +121,7 @@ export default async function AnnouncementDetailPage({ params }: AnnouncementDet
             rel="noopener noreferrer"
           >
             {announcement.document.label}
+            <span className="ml-2">(PDF, 새 창)</span>
             <span className="ml-3" aria-hidden="true">
               ↗
             </span>
