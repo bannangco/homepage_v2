@@ -44,11 +44,18 @@ export default function AnnouncementsPage() {
             <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink-muted">
               Legal information / 01
             </p>
-            <h1 className="mt-5 max-w-4xl font-nacelle text-4xl font-semibold leading-[1.08] tracking-[-0.035em] text-ink sm:text-5xl lg:text-7xl">
-              전자공고·법적 고지
+            <h1
+              aria-label="전자공고·법적 고지"
+              className="mt-5 max-w-4xl break-keep font-nacelle text-4xl font-semibold leading-[1.08] tracking-[-0.035em] text-ink [overflow-wrap:normal] sm:text-5xl lg:text-7xl"
+            >
+              <span aria-hidden="true">
+                {"전자공고·"}
+                <br className="sm:hidden" />
+                {"법적 고지"}
+              </span>
             </h1>
           </div>
-          <p className="border-t border-border pt-4 text-sm leading-6 text-ink-muted lg:border-t-0 lg:pt-0">
+          <p className="break-keep border-t border-border pt-4 text-sm leading-6 text-ink-muted [overflow-wrap:normal] lg:border-t-0 lg:pt-0">
             주식회사 반낭코의 회사 정보와 전자공고, 공개된 법적 문서를
             확인하는 공간입니다.
           </p>
@@ -65,7 +72,7 @@ export default function AnnouncementsPage() {
             </p>
             <h2
               id="company-information-title"
-              className="mt-3 font-nacelle text-3xl font-semibold tracking-[-0.025em]"
+              className="mt-3 break-keep font-nacelle text-3xl font-semibold tracking-[-0.025em] [overflow-wrap:normal]"
             >
               회사 정보
             </h2>
@@ -73,7 +80,7 @@ export default function AnnouncementsPage() {
           <dl className="grid border-t border-border sm:grid-cols-2">
             <div className="border-b border-border py-5 sm:pr-6">
               <dt className="text-xs font-semibold text-ink-muted">회사명</dt>
-              <dd className="mt-2 text-lg font-semibold">
+              <dd className="mt-2 break-keep text-lg font-semibold [overflow-wrap:normal]">
                 {COMPANY_PROFILE.legalName}
               </dd>
             </div>
@@ -87,7 +94,7 @@ export default function AnnouncementsPage() {
             </div>
             <div className="border-b border-border py-5 sm:pr-6">
               <dt className="text-xs font-semibold text-ink-muted">공고 방법</dt>
-              <dd className="mt-2 text-lg font-semibold">
+              <dd className="mt-2 break-keep text-lg font-semibold [overflow-wrap:normal]">
                 {COMPANY_PROFILE.noticeMethod}
               </dd>
             </div>
@@ -117,7 +124,7 @@ export default function AnnouncementsPage() {
               </p>
               <h2
                 id="electronic-announcements-title"
-                className="mt-3 font-nacelle text-3xl font-semibold tracking-[-0.025em]"
+                className="mt-3 break-keep font-nacelle text-3xl font-semibold tracking-[-0.025em] [overflow-wrap:normal]"
               >
                 전자공고
               </h2>
@@ -134,10 +141,10 @@ export default function AnnouncementsPage() {
                   className="mx-auto mb-6 block h-3 w-3 bg-signal"
                   aria-hidden="true"
                 />
-                <p className="text-lg font-semibold text-ink">
+                <p className="break-keep text-lg font-semibold text-ink [overflow-wrap:normal]">
                   현재 게시된 전자공고가 없습니다.
                 </p>
-                <p className="mt-2 text-sm text-ink-muted">
+                <p className="mt-2 break-keep text-sm text-ink-muted [overflow-wrap:normal]">
                   게시된 공고가 등록되면 이곳에서 확인할 수 있습니다.
                 </p>
               </div>
@@ -196,7 +203,7 @@ export default function AnnouncementsPage() {
               </p>
               <h2
                 id="legal-documents-title"
-                className="mt-3 font-nacelle text-3xl font-semibold tracking-[-0.025em]"
+                className="mt-3 break-keep font-nacelle text-3xl font-semibold tracking-[-0.025em] [overflow-wrap:normal]"
               >
                 법적 문서
               </h2>
@@ -208,7 +215,7 @@ export default function AnnouncementsPage() {
 
           {legalDocuments.length === 0 ? (
             <div className="grid min-h-48 place-items-center py-12 text-center">
-              <p className="text-lg font-semibold text-ink">
+              <p className="break-keep text-lg font-semibold text-ink [overflow-wrap:normal]">
                 현재 공개된 법적 문서가 없습니다.
               </p>
             </div>
