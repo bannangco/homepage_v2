@@ -1,5 +1,6 @@
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
+import { isDeepStrictEqual } from "node:util";
 import { fileURLToPath } from "node:url";
 
 import {
@@ -7,12 +8,29 @@ import {
   validateAnnouncements,
 } from "../lib/announcement-contract.ts";
 import {
+  COMPANY_PROFILE,
+  ORGANIZATION_JSON_LD,
+} from "../lib/company-profile.ts";
+import { validateLegalDocuments } from "../lib/legal-document-contract.ts";
+import {
+  getPublicPdfPathSegments,
+  isValidPublicPdfPath,
+} from "../lib/public-pdf-contract.mjs";
+import {
+  LEGAL_NOTICE_DESCRIPTION,
+  LEGAL_NOTICE_TITLE,
+  SITE_URL,
+} from "../lib/site-metadata.ts";
+import {
   endedServices,
   preparingServices,
   renewingServices,
   serviceCatalog,
 } from "../data/services.ts";
-import { isValidISODateOnly } from "../utils/formatDate.ts";
+import {
+  compareISODateOnlyDescending,
+  isValidISODateOnly,
+} from "../utils/formatDate.ts";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outputRoot = path.join(projectRoot, "out");
@@ -34,6 +52,25 @@ try {
     error instanceof Error
       ? `Invalid announcement data: ${error.message}`
       : "Unable to read authoritative announcement data.",
+  );
+}
+
+let legalDocuments = [];
+try {
+  legalDocuments = validateLegalDocuments(
+    JSON.parse(
+      await readFile(
+        path.join(projectRoot, "data", "legal-documents.json"),
+        "utf8",
+      ),
+    ),
+    isValidISODateOnly,
+  );
+} catch (error) {
+  failures.push(
+    error instanceof Error
+      ? `Invalid legal document data: ${error.message}`
+      : "Unable to read authoritative legal document data.",
   );
 }
 
@@ -64,7 +101,7 @@ async function requireRoute(route) {
   }
 }
 
-async function collectHtmlFiles(directory) {
+async function collectExportFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
   const files = [];
 
@@ -72,8 +109,8 @@ async function collectHtmlFiles(directory) {
     const entryPath = path.join(directory, entry.name);
 
     if (entry.isDirectory()) {
-      files.push(...(await collectHtmlFiles(entryPath)));
-    } else if (entry.isFile() && entry.name.endsWith(".html")) {
+      files.push(...(await collectExportFiles(entryPath)));
+    } else if (entry.isFile()) {
       files.push(entryPath);
     }
   }
@@ -82,13 +119,37 @@ async function collectHtmlFiles(directory) {
 }
 
 function exportedPathFromUrl(url) {
-  const pathname = decodeURIComponent(url.split(/[?#]/, 1)[0]);
-
-  if (!pathname.startsWith("/") || pathname === "/") {
+  if (typeof url !== "string" || !url.startsWith("/") || url.startsWith("//")) {
     return null;
   }
 
-  return path.join(outputRoot, ...pathname.slice(1).split("/"));
+  let pathname;
+  try {
+    pathname = decodeURIComponent(url.split(/[?#]/, 1)[0]);
+  } catch {
+    return null;
+  }
+
+  if (pathname === "/" || pathname.includes("\\")) {
+    return null;
+  }
+
+  const resolvedPath = path.resolve(outputRoot, `.${pathname}`);
+  const outputPrefix = `${path.resolve(outputRoot)}${path.sep}`;
+
+  return resolvedPath.startsWith(outputPrefix) ? resolvedPath : null;
+}
+
+function exportedPdfPathFromHref(href) {
+  const segments = getPublicPdfPathSegments(href);
+  const resolvedPath = path.resolve(outputRoot, ...segments);
+  const outputPrefix = `${path.resolve(outputRoot)}${path.sep}`;
+
+  if (!resolvedPath.startsWith(outputPrefix)) {
+    throw new TypeError(`Public PDF path escaped out/: ${href}`);
+  }
+
+  return resolvedPath;
 }
 
 function textFromHtmlFragment(html) {
@@ -216,15 +277,138 @@ await requireRoute("/announcements");
 
 for (const announcement of announcements) {
   await requireRoute(getAnnouncementPath(announcement.id));
+}
 
-  const documentHref = announcement.document?.href;
-  if (typeof documentHref === "string" && documentHref.startsWith("/")) {
-    const documentPath = exportedPathFromUrl(documentHref);
-    if (documentPath && !(await isFile(documentPath))) {
-      failures.push(
-        `Announcement ${announcement.id} references a missing document: ${documentHref}`,
-      );
+function getMetaContents(startTags, attribute, value) {
+  return startTags.flatMap((startTag) => {
+    if (
+      startTag.tagName !== "meta" ||
+      getLiteralAttribute(startTag.html, attribute) !== value
+    ) {
+      return [];
     }
+
+    const content = getLiteralAttribute(startTag.html, "content");
+    return content === null ? [] : [content];
+  });
+}
+
+function getPdfAnchorStartTags(html) {
+  return getLiteralStartTags(html).filter((startTag) => {
+    if (startTag.tagName !== "a") return false;
+
+    const href = getLiteralAttribute(startTag.html, "href");
+    return (
+      href !== null &&
+      (href.toLowerCase().includes(".pdf") || href.startsWith("/legal/"))
+    );
+  });
+}
+
+function getJsonLdScriptContents(html) {
+  return [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)].flatMap(
+    ([, attributes, content]) =>
+      /\btype\s*=\s*(["'])application\/ld\+json\1/i.test(attributes)
+        ? [content.trim()]
+        : [],
+  );
+}
+
+function isPlainObject(value) {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    Object.getPrototypeOf(value) === Object.prototype
+  );
+}
+
+function verifySharedFooter(html, relativePath) {
+  const startTags = getLiteralStartTags(html);
+  const footerStartTags = startTags.filter(
+    (startTag) => startTag.tagName === "footer",
+  );
+  const footerElement =
+    footerStartTags.length === 1
+      ? getMatchingElement(html, footerStartTags[0])
+      : null;
+
+  if (!footerElement) {
+    failures.push(`${relativePath} must contain exactly one shared site footer.`);
+    return;
+  }
+
+  const exactLegalLinks = getLiteralStartTags(footerElement.fragment).filter(
+    (startTag) =>
+      startTag.tagName === "a" &&
+      getLiteralAttribute(startTag.html, "href") === "/announcements",
+  );
+  const legalLinkElement =
+    exactLegalLinks.length === 1
+      ? getMatchingElement(footerElement.fragment, exactLegalLinks[0])
+      : null;
+
+  if (
+    !legalLinkElement ||
+    textFromHtmlFragment(legalLinkElement.fragment) !==
+      "전자공고·법적 고지"
+  ) {
+    failures.push(
+      `${relativePath} footer must contain exactly one /announcements link labelled 전자공고·법적 고지.`,
+    );
+  }
+}
+
+function compareText(a, b) {
+  if (a === b) return 0;
+  return a < b ? -1 : 1;
+}
+
+function decodeXmlText(value) {
+  return value
+    .replaceAll("&amp;", "&")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&apos;", "'")
+    .trim();
+}
+
+const declaredPdfReferences = [
+  ...announcements.flatMap((announcement) =>
+    announcement.document
+      ? [
+          {
+            owner: `Announcement ${announcement.id}`,
+            href: announcement.document.href,
+          },
+        ]
+      : [],
+  ),
+  ...legalDocuments.map((document) => ({
+    owner: `Legal document ${document.id}`,
+    href: document.href,
+  })),
+];
+const declaredPdfHrefs = new Set(
+  declaredPdfReferences.map(({ href }) => href),
+);
+
+for (const { owner, href } of declaredPdfReferences) {
+  let documentPath;
+  try {
+    documentPath = exportedPdfPathFromHref(href);
+  } catch (error) {
+    failures.push(
+      error instanceof Error
+        ? `${owner} has an unsafe PDF reference: ${error.message}`
+        : `${owner} has an unsafe PDF reference.`,
+    );
+    continue;
+  }
+
+  if (!(await isFile(documentPath))) {
+    failures.push(`${owner} references a missing exported PDF: ${href}`);
   }
 }
 
@@ -243,11 +427,218 @@ if ((await Promise.all(staleDetailCandidates.map(isFile))).some(Boolean)) {
   );
 }
 
+let exportFiles = [];
 let htmlFiles = [];
 try {
-  htmlFiles = await collectHtmlFiles(outputRoot);
+  exportFiles = await collectExportFiles(outputRoot);
+  htmlFiles = exportFiles.filter((filePath) => filePath.endsWith(".html"));
 } catch {
   failures.push("Unable to inspect the out/ directory. Run `npm run build` first.");
+}
+
+function routeFromExportPayload(filePath) {
+  const relativePath = path
+    .relative(outputRoot, filePath)
+    .replaceAll(path.sep, "/");
+
+  if (!/\.(?:html|txt)$/.test(relativePath)) {
+    return null;
+  }
+
+  const withoutExtension = relativePath.replace(/\.(?:html|txt)$/, "");
+  const routePath = withoutExtension.endsWith("/index")
+    ? withoutExtension.slice(0, -"/index".length)
+    : withoutExtension;
+
+  return `/${routePath}`;
+}
+
+const expectedAnnouncementDetailRoutes = announcements
+  .map((announcement) => getAnnouncementPath(announcement.id))
+  .sort();
+const exportedAnnouncementDetailRoutes = [
+  ...new Set(
+    exportFiles
+      .map(routeFromExportPayload)
+      .filter(
+        (route) =>
+          typeof route === "string" && route.startsWith("/announcements/"),
+      ),
+  ),
+].sort();
+
+if (
+  !stringArraysMatch(
+    exportedAnnouncementDetailRoutes,
+    expectedAnnouncementDetailRoutes,
+  )
+) {
+  failures.push(
+    `Exported announcement detail routes must exactly match authoritative data (expected: ${expectedAnnouncementDetailRoutes.join(", ") || "none"}; received: ${exportedAnnouncementDetailRoutes.join(", ") || "none"}).`,
+  );
+}
+
+const exportedLegalPdfHrefs = exportFiles
+  .filter((filePath) => filePath.toLowerCase().endsWith(".pdf"))
+  .map(
+    (filePath) =>
+      `/${path.relative(outputRoot, filePath).replaceAll(path.sep, "/")}`,
+  )
+  .sort();
+const expectedPdfHrefs = [...declaredPdfHrefs].sort();
+
+if (!stringArraysMatch(exportedLegalPdfHrefs, expectedPdfHrefs)) {
+  failures.push(
+    `Exported PDFs must exactly match authoritative references (expected: ${expectedPdfHrefs.join(", ") || "none"}; received: ${exportedLegalPdfHrefs.join(", ") || "none"}).`,
+  );
+}
+
+for (const announcement of announcements) {
+  const route = getAnnouncementPath(announcement.id);
+  const detailHtmlFiles = htmlFiles.filter(
+    (filePath) => routeFromExportPayload(filePath) === route,
+  );
+
+  if (detailHtmlFiles.length !== 1) {
+    failures.push(
+      `Announcement ${announcement.id} must have exactly one exported HTML detail page.`,
+    );
+    continue;
+  }
+
+  const detailHtml = await readFile(detailHtmlFiles[0], "utf8");
+  const detailStartTags = getLiteralStartTags(detailHtml);
+  const pdfLinks = getPdfAnchorStartTags(detailHtml);
+  const expectedTitle = `${announcement.title} - 전자공고·법적 고지 - 반낭코`;
+  const canonicalLinks = detailStartTags.filter(
+    (startTag) =>
+      startTag.tagName === "link" &&
+      getLiteralAttribute(startTag.html, "rel") === "canonical" &&
+      getLiteralAttribute(startTag.html, "href") === `${SITE_URL}${route}`,
+  );
+
+  if (canonicalLinks.length !== 1) {
+    failures.push(
+      `Announcement ${announcement.id} must have an exact canonical URL.`,
+    );
+  }
+
+  for (const [attribute, name, expectedContent] of [
+    ["property", "og:title", expectedTitle],
+    ["property", "og:description", announcement.summary],
+    ["property", "og:url", `${SITE_URL}${route}`],
+    ["property", "og:image", `${SITE_URL}/images/ogimage.png`],
+    ["name", "twitter:title", expectedTitle],
+    ["name", "twitter:description", announcement.summary],
+  ]) {
+    const contents = getMetaContents(detailStartTags, attribute, name);
+    if (contents.length !== 1 || contents[0] !== expectedContent) {
+      failures.push(
+        `Announcement ${announcement.id} must contain exact ${name} metadata.`,
+      );
+    }
+  }
+
+  if (!announcement.document) {
+    if (pdfLinks.length !== 0) {
+      failures.push(
+        `Announcement ${announcement.id} must not render an undeclared PDF link.`,
+      );
+    }
+    continue;
+  }
+
+  const matchingLinks = pdfLinks.filter(
+    (startTag) =>
+      getLiteralAttribute(startTag.html, "href") ===
+      announcement.document.href,
+  );
+  const linkElement =
+    matchingLinks.length === 1
+      ? getMatchingElement(detailHtml, matchingLinks[0])
+      : null;
+  const linkText = linkElement
+    ? getVisibleDocumentText(linkElement.fragment)
+    : "";
+  const relTokens = new Set(
+    (matchingLinks[0]
+      ? getLiteralAttribute(matchingLinks[0].html, "rel")
+      : ""
+    )?.split(/\s+/),
+  );
+
+  if (
+    pdfLinks.length !== 1 ||
+    matchingLinks.length !== 1 ||
+    !linkElement ||
+    getLiteralAttribute(matchingLinks[0].html, "target") !== "_blank" ||
+    !relTokens.has("noopener") ||
+    !relTokens.has("noreferrer") ||
+    !linkText.includes(announcement.document.label) ||
+    !linkText.includes("PDF, 새 창")
+  ) {
+    failures.push(
+      `Announcement ${announcement.id} must render exactly its declared accessible PDF link.`,
+    );
+  }
+}
+
+let sitemapXml = "";
+try {
+  sitemapXml = await readFile(path.join(outputRoot, "sitemap.xml"), "utf8");
+} catch {
+  // The required-file check above already reports a missing sitemap.
+}
+
+if (sitemapXml) {
+  const sitemapEntries = [...sitemapXml.matchAll(/<url>([\s\S]*?)<\/url>/gi)].map(
+    ([, block]) => ({
+      loc: decodeXmlText(/<loc>([\s\S]*?)<\/loc>/i.exec(block)?.[1] ?? ""),
+      lastmod: decodeXmlText(
+        /<lastmod>([\s\S]*?)<\/lastmod>/i.exec(block)?.[1] ?? "",
+      ),
+    }),
+  );
+  const sortedAnnouncements = [...announcements].sort((a, b) => {
+    const dateOrder = compareISODateOnlyDescending(a.createdAt, b.createdAt);
+    return dateOrder || compareText(a.id, b.id);
+  });
+  const expectedSitemapLocations = [
+    SITE_URL,
+    `${SITE_URL}/announcements`,
+    ...sortedAnnouncements.map(
+      (announcement) => `${SITE_URL}${getAnnouncementPath(announcement.id)}`,
+    ),
+  ];
+  const actualSitemapLocations = sitemapEntries.map(({ loc }) => loc);
+
+  if (
+    !stringArraysMatch(actualSitemapLocations, expectedSitemapLocations)
+  ) {
+    failures.push(
+      `sitemap.xml must contain only generated public routes in deterministic order (expected: ${expectedSitemapLocations.join(", ")}; received: ${actualSitemapLocations.join(", ") || "none"}).`,
+    );
+  }
+
+  for (const baseLocation of [SITE_URL, `${SITE_URL}/announcements`]) {
+    const entry = sitemapEntries.find(({ loc }) => loc === baseLocation);
+    if (!entry || entry.lastmod !== "") {
+      failures.push(
+        `sitemap.xml must not synthesize lastmod for ${baseLocation}.`,
+      );
+    }
+  }
+
+  for (const announcement of sortedAnnouncements) {
+    const expectedLocation = `${SITE_URL}${getAnnouncementPath(announcement.id)}`;
+    const entry = sitemapEntries.find(({ loc }) => loc === expectedLocation);
+
+    if (!entry || entry.lastmod !== announcement.createdAt) {
+      failures.push(
+        `sitemap.xml must derive ${expectedLocation} lastmod from authoritative createdAt ${announcement.createdAt}.`,
+      );
+    }
+  }
 }
 
 let homepageHtml = "";
@@ -258,6 +649,45 @@ try {
 }
 
 if (homepageHtml) {
+  if (!/<html\b[^>]*\blang=["']ko["']/i.test(homepageHtml)) {
+    failures.push("out/index.html must preserve <html lang=\"ko\">.");
+  }
+
+  const organizationScripts = getJsonLdScriptContents(homepageHtml);
+  if (organizationScripts.length !== 1) {
+    failures.push(
+      `out/index.html must contain exactly one Organization JSON-LD script (received: ${organizationScripts.length}).`,
+    );
+  } else {
+    const [rawOrganizationJson] = organizationScripts;
+
+    if (rawOrganizationJson.includes("<")) {
+      failures.push(
+        "Organization JSON-LD must escape literal < characters for script safety.",
+      );
+    }
+
+    try {
+      const parsedOrganization = JSON.parse(rawOrganizationJson);
+      const actualKeys = isPlainObject(parsedOrganization)
+        ? Object.keys(parsedOrganization).sort()
+        : [];
+      const expectedKeys = Object.keys(ORGANIZATION_JSON_LD).sort();
+
+      if (
+        !isPlainObject(parsedOrganization) ||
+        !stringArraysMatch(actualKeys, expectedKeys) ||
+        !isDeepStrictEqual(parsedOrganization, ORGANIZATION_JSON_LD)
+      ) {
+        failures.push(
+          "Organization JSON-LD must contain exactly the approved company fields and values.",
+        );
+      }
+    } catch {
+      failures.push("Organization JSON-LD must be valid JSON.");
+    }
+  }
+
   const accessibleMusePickerHeadingCount =
     countAccessibleMusePickerHeadings(homepageHtml);
   if (accessibleMusePickerHeadingCount !== 1) {
@@ -267,6 +697,17 @@ if (homepageHtml) {
   }
 
   const literalStartTags = getLiteralStartTags(homepageHtml);
+  const homepageCanonicalLinks = literalStartTags.filter(
+    (startTag) =>
+      startTag.tagName === "link" &&
+      getLiteralAttribute(startTag.html, "rel") === "canonical" &&
+      getLiteralAttribute(startTag.html, "href") === SITE_URL,
+  );
+  if (homepageCanonicalLinks.length !== 1) {
+    failures.push(
+      `out/index.html must contain exactly one canonical link to ${SITE_URL}.`,
+    );
+  }
   const requiredSectionIds = [
     "company",
     "about",
@@ -550,11 +991,10 @@ if (homepageHtml) {
         url.pathname.startsWith("/announcements/"))
     );
   });
-  const baseLegalLinkStartTags = legalLinkStartTags.filter((startTag) => {
-    const href = getLiteralAttribute(startTag.html, "href");
-    const url = href === null ? null : getBannangcoUrl(href);
-    return url?.pathname.replace(/\/+$/, "") === "/announcements";
-  });
+  const baseLegalLinkStartTags = legalLinkStartTags.filter(
+    (startTag) =>
+      getLiteralAttribute(startTag.html, "href") === "/announcements",
+  );
   const legalLinkElement =
     baseLegalLinkStartTags.length === 1
       ? getMatchingElement(homepageHtml, baseLegalLinkStartTags[0])
@@ -625,9 +1065,298 @@ if (homepageHtml) {
 
 }
 
+let legalHubHtml = "";
+try {
+  legalHubHtml = await readFile(
+    path.join(outputRoot, "announcements.html"),
+    "utf8",
+  );
+} catch {
+  // The required-route check above already reports a missing legal hub.
+}
+
+if (legalHubHtml) {
+  const legalHubStartTags = getLiteralStartTags(legalHubHtml);
+  const sortedLegalDocuments = [...legalDocuments].sort((a, b) => {
+    if (a.date !== undefined && b.date !== undefined) {
+      return compareISODateOnlyDescending(a.date, b.date) || compareText(a.id, b.id);
+    }
+    if (a.date !== undefined) return -1;
+    if (b.date !== undefined) return 1;
+    return compareText(a.id, b.id);
+  });
+  const legalSectionIds = [
+    "company-information",
+    "electronic-announcements",
+    "legal-documents",
+  ];
+  const legalSectionPositions = [];
+  const legalSectionElements = new Map();
+
+  for (const sectionId of legalSectionIds) {
+    const matches = legalHubStartTags.filter(
+      (startTag) => getLiteralAttribute(startTag.html, "id") === sectionId,
+    );
+    if (matches.length !== 1) {
+      failures.push(
+        `out/announcements.html must contain exactly one #${sectionId} section.`,
+      );
+    } else {
+      legalSectionPositions.push(matches[0].start);
+      const element = getMatchingElement(legalHubHtml, matches[0]);
+      if (!element) {
+        failures.push(
+          `Unable to inspect #${sectionId} in out/announcements.html.`,
+        );
+      } else {
+        legalSectionElements.set(sectionId, element);
+      }
+    }
+  }
+
+  if (
+    legalSectionPositions.length === legalSectionIds.length &&
+    legalSectionPositions.some(
+      (position, index) =>
+        index > 0 && position <= legalSectionPositions[index - 1],
+    )
+  ) {
+    failures.push(
+      "out/announcements.html must order company information, electronic announcements, then legal documents.",
+    );
+  }
+
+  const companyInformationText = getVisibleDocumentText(
+    legalSectionElements.get("company-information")?.fragment ?? "",
+  );
+  for (const requiredText of [
+    COMPANY_PROFILE.legalName,
+    COMPANY_PROFILE.foundingDate.replaceAll("-", "."),
+    COMPANY_PROFILE.noticeMethod,
+    COMPANY_PROFILE.email,
+  ]) {
+    if (!companyInformationText.includes(requiredText)) {
+      failures.push(
+        `out/announcements.html is missing confirmed company information: ${requiredText}.`,
+      );
+    }
+  }
+
+  const announcementSection = legalSectionElements.get(
+    "electronic-announcements",
+  );
+  const announcementSectionTags = announcementSection
+    ? getLiteralStartTags(announcementSection.fragment)
+    : [];
+  const renderedAnnouncementMarkers = announcementSectionTags.flatMap((startTag) => {
+    const id = getLiteralAttribute(startTag.html, "data-announcement-id");
+    return id === null ? [] : [{ id, startTag }];
+  });
+  const sortedAnnouncements = announcements
+    .slice()
+    .sort((a, b) => {
+      const dateOrder = compareISODateOnlyDescending(a.createdAt, b.createdAt);
+      return dateOrder || compareText(a.id, b.id);
+    });
+  const expectedAnnouncementIds = sortedAnnouncements.map(
+    (announcement) => announcement.id,
+  );
+  const renderedAnnouncementIds = renderedAnnouncementMarkers.map(
+    ({ id }) => id,
+  );
+
+  if (!stringArraysMatch(renderedAnnouncementIds, expectedAnnouncementIds)) {
+    failures.push(
+      `The legal hub must render only authoritative announcements (expected: ${expectedAnnouncementIds.join(", ") || "none"}; received: ${renderedAnnouncementIds.join(", ") || "none"}).`,
+    );
+  }
+
+  const allAnnouncementMarkers = legalHubStartTags.filter(
+    (startTag) =>
+      getLiteralAttribute(startTag.html, "data-announcement-id") !== null,
+  );
+  if (allAnnouncementMarkers.length !== renderedAnnouncementMarkers.length) {
+    failures.push(
+      "Announcement records must be contained by #electronic-announcements.",
+    );
+  }
+
+  for (const announcement of sortedAnnouncements) {
+    const marker = renderedAnnouncementMarkers.find(
+      ({ id }) => id === announcement.id,
+    );
+    const element = marker
+      ? getMatchingElement(announcementSection.fragment, marker.startTag)
+      : null;
+    const text = element ? getVisibleDocumentText(element.fragment) : "";
+
+    if (
+      !marker ||
+      marker.startTag.tagName !== "a" ||
+      getLiteralAttribute(marker.startTag.html, "href") !==
+        getAnnouncementPath(announcement.id) ||
+      !text.includes(announcement.title) ||
+      !text.includes(announcement.summary) ||
+      !text.includes(announcement.createdAt.replaceAll("-", "."))
+    ) {
+      failures.push(
+        `Announcement ${announcement.id} must render its exact source-controlled route and content in #electronic-announcements.`,
+      );
+    }
+  }
+
+  const hasAnnouncementEmptyState = getVisibleDocumentText(
+    announcementSection?.fragment ?? "",
+  ).includes("현재 게시된 전자공고가 없습니다.");
+  if (hasAnnouncementEmptyState !== (announcements.length === 0)) {
+    failures.push(
+      "The electronic-announcement empty state must match authoritative data.",
+    );
+  }
+
+  const legalDocumentSection = legalSectionElements.get("legal-documents");
+  const legalDocumentSectionTags = legalDocumentSection
+    ? getLiteralStartTags(legalDocumentSection.fragment)
+    : [];
+  const legalDocumentMarkers = legalDocumentSectionTags.flatMap((startTag) => {
+    const id = getLiteralAttribute(startTag.html, "data-legal-document-id");
+    return id === null ? [] : [{ id, startTag }];
+  });
+  if (
+    !stringArraysMatch(
+      legalDocumentMarkers.map(({ id }) => id),
+      sortedLegalDocuments.map((document) => document.id),
+    )
+  ) {
+    failures.push(
+      `The legal hub must render only authoritative legal documents (expected: ${sortedLegalDocuments.map(({ id }) => id).join(", ") || "none"}; received: ${legalDocumentMarkers.map(({ id }) => id).join(", ") || "none"}).`,
+    );
+  }
+
+  const allLegalDocumentMarkers = legalHubStartTags.filter(
+    (startTag) =>
+      getLiteralAttribute(startTag.html, "data-legal-document-id") !== null,
+  );
+  if (allLegalDocumentMarkers.length !== legalDocumentMarkers.length) {
+    failures.push("Legal document records must be contained by #legal-documents.");
+  }
+
+  const renderedLegalPdfHrefs = getPdfAnchorStartTags(legalHubHtml)
+    .map((startTag) => getLiteralAttribute(startTag.html, "href"))
+    .filter((href) => href !== null)
+    .sort();
+  const expectedLegalPdfHrefs = sortedLegalDocuments
+    .map((document) => document.href)
+    .sort();
+  if (!stringArraysMatch(renderedLegalPdfHrefs, expectedLegalPdfHrefs)) {
+    failures.push(
+      `The legal hub PDF links must exactly match legal-document data (expected: ${expectedLegalPdfHrefs.join(", ") || "none"}; received: ${renderedLegalPdfHrefs.join(", ") || "none"}).`,
+    );
+  }
+
+  for (const document of sortedLegalDocuments) {
+    const marker = legalDocumentMarkers.find(({ id }) => id === document.id);
+    const element = marker
+      ? getMatchingElement(legalDocumentSection.fragment, marker.startTag)
+      : null;
+    const documentLinks = element
+      ? getLiteralStartTags(element.fragment).filter(
+          (startTag) =>
+            startTag.tagName === "a" &&
+            getLiteralAttribute(startTag.html, "href") === document.href,
+        )
+      : [];
+    const link = documentLinks[0];
+    const relTokens = new Set(
+      (link ? getLiteralAttribute(link.html, "rel") : "")?.split(/\s+/),
+    );
+    const timeElements = element
+      ? getLiteralStartTags(element.fragment).filter(
+          (startTag) => startTag.tagName === "time",
+        )
+      : [];
+    const hasExpectedDate =
+      document.date === undefined
+        ? timeElements.length === 0
+        : timeElements.length === 1 &&
+          getLiteralAttribute(timeElements[0].html, "datetime") ===
+            document.date &&
+          getVisibleDocumentText(element?.fragment ?? "").includes(
+            document.date.replaceAll("-", "."),
+          );
+
+    if (
+      !element ||
+      documentLinks.length !== 1 ||
+      getLiteralAttribute(marker.startTag.html, "data-document-kind") !==
+        document.kind ||
+      !link ||
+      getLiteralAttribute(link.html, "target") !== "_blank" ||
+      !relTokens.has("noopener") ||
+      !relTokens.has("noreferrer") ||
+      !getVisibleDocumentText(element.fragment).includes(document.displayName) ||
+      !getVisibleDocumentText(element.fragment).includes("PDF, 새 창") ||
+      !hasExpectedDate
+    ) {
+      failures.push(
+        `Legal document ${document.id} must render one accessible, source-controlled PDF link.`,
+      );
+    }
+  }
+
+  const hasLegalDocumentEmptyState = getVisibleDocumentText(
+    legalDocumentSection?.fragment ?? "",
+  ).includes("현재 공개된 법적 문서가 없습니다.");
+  if (hasLegalDocumentEmptyState !== (legalDocuments.length === 0)) {
+    failures.push(
+      "The legal-document empty state must match authoritative data.",
+    );
+  }
+
+  const canonicalLinks = legalHubStartTags.filter(
+    (startTag) =>
+      startTag.tagName === "link" &&
+      getLiteralAttribute(startTag.html, "rel") === "canonical" &&
+      getLiteralAttribute(startTag.html, "href") ===
+        `${SITE_URL}/announcements`,
+  );
+  if (canonicalLinks.length !== 1) {
+    failures.push(
+      `out/announcements.html must contain exactly one canonical link to ${SITE_URL}/announcements.`,
+    );
+  }
+
+  const expectedSocialMetadata = [
+    ["property", "og:title", LEGAL_NOTICE_TITLE],
+    ["property", "og:description", LEGAL_NOTICE_DESCRIPTION],
+    ["property", "og:url", `${SITE_URL}/announcements`],
+    ["property", "og:image", `${SITE_URL}/images/ogimage.png`],
+    ["name", "twitter:title", LEGAL_NOTICE_TITLE],
+    ["name", "twitter:description", LEGAL_NOTICE_DESCRIPTION],
+  ];
+  for (const [attribute, name, expectedContent] of expectedSocialMetadata) {
+    const contents = getMetaContents(legalHubStartTags, attribute, name);
+    if (contents.length !== 1 || contents[0] !== expectedContent) {
+      failures.push(
+        `out/announcements.html must contain exact ${name} metadata.`,
+      );
+    }
+  }
+}
+
+const renderedPdfHrefs = new Set();
+
 for (const htmlFile of htmlFiles) {
   const html = await readFile(htmlFile, "utf8");
   const relativePath = path.relative(projectRoot, htmlFile).replaceAll(path.sep, "/");
+
+  verifySharedFooter(html, relativePath);
+
+  if (getJsonLdScriptContents(html).length !== 1) {
+    failures.push(
+      `${relativePath} must contain exactly one root Organization JSON-LD script.`,
+    );
+  }
 
   if (html.includes("/_next/image")) {
     failures.push(`${relativePath} references the Next.js image optimizer`);
@@ -639,6 +1368,49 @@ for (const htmlFile of htmlFiles) {
 
   if (/\/announcements\/1(?:[/?#"']|$)/.test(html)) {
     failures.push(`${relativePath} references the removed /announcements/1 placeholder`);
+  }
+
+  for (const startTag of getLiteralStartTags(html)) {
+    if (startTag.tagName !== "a") continue;
+
+    const href = getLiteralAttribute(startTag.html, "href");
+    if (
+      href === null ||
+      (!href.toLowerCase().includes(".pdf") && !href.startsWith("/legal/"))
+    ) {
+      continue;
+    }
+
+    if (!isValidPublicPdfPath(href)) {
+      failures.push(`${relativePath} contains an unsafe PDF link: ${href}`);
+      continue;
+    }
+
+    if (!declaredPdfHrefs.has(href)) {
+      failures.push(
+        `${relativePath} links to a PDF that is absent from authoritative data: ${href}`,
+      );
+      continue;
+    }
+
+    const renderedRoute = routeFromExportPayload(htmlFile);
+    const allowedOnLegalHub =
+      renderedRoute === "/announcements" &&
+      legalDocuments.some((document) => document.href === href);
+    const allowedOnAnnouncementDetail = announcements.some(
+      (announcement) =>
+        announcement.document?.href === href &&
+        renderedRoute === getAnnouncementPath(announcement.id),
+    );
+
+    if (!allowedOnLegalHub && !allowedOnAnnouncementDetail) {
+      failures.push(
+        `${relativePath} renders a declared PDF outside its authoritative page: ${href}`,
+      );
+      continue;
+    }
+
+    renderedPdfHrefs.add(href);
   }
 
   const assetUrls = new Set();
@@ -660,6 +1432,14 @@ for (const htmlFile of htmlFiles) {
       failures.push(`${relativePath} references missing local asset: ${assetUrl}`);
     }
   }
+}
+
+if (
+  !stringArraysMatch([...renderedPdfHrefs].sort(), [...declaredPdfHrefs].sort())
+) {
+  failures.push(
+    `Rendered PDF links must exactly match authoritative references (expected: ${[...declaredPdfHrefs].sort().join(", ") || "none"}; received: ${[...renderedPdfHrefs].sort().join(", ") || "none"}).`,
+  );
 }
 
 if (failures.length > 0) {

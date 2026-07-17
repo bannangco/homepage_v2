@@ -1,7 +1,10 @@
 import type { Announcement } from "@/types/announcement";
 
+import { isValidPublicPdfPath } from "./public-pdf-contract.mjs";
+
 export const ANNOUNCEMENT_ID_PATTERN =
   /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const KOREAN_TEXT_PATTERN = /[가-힣]/;
 
 type DateOnlyValidator = (value: string) => boolean;
 
@@ -79,11 +82,12 @@ export function validateAnnouncements(
     if (item.document !== undefined) {
       if (
         !isRecord(item.document) ||
-        !isNonEmptyString(item.document.href) ||
-        !isNonEmptyString(item.document.label)
+        !isNonEmptyString(item.document.label) ||
+        !KOREAN_TEXT_PATTERN.test(item.document.label) ||
+        !isValidPublicPdfPath(item.document.href)
       ) {
         throw new TypeError(
-          `Announcement ${JSON.stringify(item.id)} has an invalid document reference.`,
+          `Announcement ${JSON.stringify(item.id)} has an invalid document reference; expected a non-empty Korean label and a safe root-relative local PDF path below /legal/.`,
         );
       }
     }
