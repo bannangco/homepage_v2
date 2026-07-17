@@ -1,7 +1,50 @@
+:root {
+  --color-ink: 15 17 15;
+  --color-ink-muted: 83 86 77;
+  --color-ivory: 247 243 231;
+  --color-ivory-muted: 232 225 205;
+  --color-signal: 251 195 32;
+  --color-grid: 47 51 43;
+  --color-border: 193 185 160;
+  --color-surface-dark: 23 26 22;
+  --color-surface-light: 255 252 244;
+  color-scheme: light;
+}
+
+html {
+  background: rgb(var(--color-ivory));
+  scroll-behavior: smooth;
+}
+
+body {
+  overflow-wrap: anywhere;
+}
+
+::selection {
+  background: rgb(var(--color-signal));
+  color: rgb(var(--color-ink));
+}
+
+[id] {
+  scroll-margin-top: 6rem;
+}
+
+.signal-grid {
+  background-image:
+    linear-gradient(rgb(var(--color-grid) / 0.32) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--color-grid) / 0.32) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.section-reveal {
+  opacity: 1;
+  transform: none;
+}
+
 @keyframes heroRise {
   from {
-    opacity: 0;
-    transform: translateY(32px);
+    opacity: 0.72;
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -9,13 +52,141 @@
   }
 }
 
+@keyframes culturalSignalFlow {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -100;
+  }
+}
+
+@keyframes culturalSignalPulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.86);
+  }
+  48% {
+    opacity: 1;
+    transform: scale(1.45);
+  }
+}
+
+@keyframes sectionReveal {
+  from {
+    opacity: 0.78;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes headerProgress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes archiveBodyIn {
+  from {
+    opacity: 0.76;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-enter-1 {
+    animation: heroRise 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .hero-enter-2 {
+    animation: heroRise 650ms 80ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .hero-enter-3 {
+    animation: heroRise 680ms 150ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .cultural-signal-flow-path {
+    animation: culturalSignalFlow 12s linear infinite;
+  }
+
+  .cultural-signal-pulse-node {
+    animation: culturalSignalPulse 3.4s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  details[open] .archive-body {
+    animation: archiveBodyIn 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@media (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .cultural-signal-field__plane {
+    will-change: transform;
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .header-scroll-progress {
+      animation: headerProgress linear both;
+      animation-timeline: scroll(root block);
+      animation-range: 0% 100%;
+    }
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .section-reveal {
+      animation: sectionReveal 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+      animation-timeline: view();
+      animation-range: entry 4% entry 32%;
+    }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .cultural-signal-field__plane,
+  .section-reveal {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .cultural-signal-flow-path,
+  .cultural-signal-pulse-node,
+  .header-scroll-progress,
+  .archive-body {
+    animation: none !important;
+  }
+
+  .header-scroll-progress {
+    transform: scaleX(0) !important;
   }
 }
