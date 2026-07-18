@@ -22,12 +22,36 @@ test("uses an exact assets-only Wrangler configuration", async () => {
       not_found_handling: "404-page",
       html_handling: "auto-trailing-slash",
     },
+    routes: [
+      {
+        pattern: "bannangco.com",
+        custom_domain: true,
+      },
+    ],
+    workers_dev: false,
+    preview_urls: false,
   });
-  assert.equal(Object.hasOwn(config, "main"), false);
-  assert.equal(Object.hasOwn(config, "account_id"), false);
+  assert.equal(config.routes.length, 1);
+  assert.deepEqual(config.routes[0], {
+    pattern: "bannangco.com",
+    custom_domain: true,
+  });
+  assert.equal(/^bannangco\.com$/.test(config.routes[0].pattern), true);
+  assert.equal(config.routes[0].pattern.startsWith("www."), false);
+  assert.equal(config.workers_dev, false);
+  assert.equal(config.preview_urls, false);
+
+  for (const forbiddenKey of [
+    "main",
+    "bindings",
+    "account_id",
+    "zone_id",
+    "secrets",
+    "pages_build_output_dir",
+  ]) {
+    assert.equal(Object.hasOwn(config, forbiddenKey), false);
+  }
   assert.equal(Object.hasOwn(config, "route"), false);
-  assert.equal(Object.hasOwn(config, "routes"), false);
-  assert.equal(Object.hasOwn(config, "pages_build_output_dir"), false);
 });
 
 test("pins Wrangler and exposes only the intended deployment commands", async () => {
