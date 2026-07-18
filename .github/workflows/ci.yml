@@ -50,3 +50,6 @@ jobs:
 
       - name: Verify static export
         run: npm run check:static
+
+      - name: Verify Cloudflare Workers bundle
+        run: npm run check:cloudflare

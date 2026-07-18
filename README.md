@@ -8,7 +8,7 @@ Bannangco(주식회사 반낭코) 공식 홈페이지입니다. Next.js App Rout
 - Next.js 15, React 19, TypeScript
 - Tailwind CSS 3
 - 소스 관리되는 전자공고·법적 고지 데이터
-- Cloudflare Pages 정적 호스팅
+- Cloudflare Workers Static Assets 정적 호스팅
 
 인증, 데이터베이스, 서버 API, Firebase, CMS, 파일 업로드 기능은 사용하지 않습니다.
 
@@ -31,6 +31,7 @@ npm run typecheck
 npm test
 npm run build
 npm run check:static
+npm run check:cloudflare
 npm audit --omit=dev
 npm audit
 ```
@@ -64,18 +65,28 @@ Organization JSON-LD는 확인된 법인명, 브랜드명, 사이트 URL, 공식
 
 홈페이지 서비스 사실과 표시 상태는 `data/services.ts`의 typed catalog에서 관리합니다. MusePicker의 `temporary-wordmark` presentation은 공식 로고가 아닌 임시 typography treatment이며 명시적으로 `official: false`입니다. 공식 로고가 제공되면 카드 구조를 변경하지 않고 이 항목의 presentation 설정 한 곳만 검증된 image asset으로 교체합니다. 임시 워드마크를 이미지나 Open Graph 이미지로 재사용하지 않습니다.
 
-## Cloudflare Pages readiness
+## Cloudflare Workers Static Assets readiness
 
-향후 Cloudflare Pages 프로젝트는 다음 설정을 사용합니다.
+기본 호스팅 대상은 Cloudflare Workers Static Assets입니다. Next.js는 계속 `output: "export"`로 빌드되며, root `wrangler.jsonc`가 별도 Worker runtime 없이 `out/`만 정적 자산으로 배포합니다.
 
-- Build command: `npm run build`
-- Build output directory: `out`
+Cloudflare Dashboard의 Workers Builds Git 연동에는 다음 값을 사용합니다.
+
 - Production branch: `master`
-- Node.js runtime: Node.js 24 LTS
+- Build command: `npm run build && npm run check:static`
+- Deploy command: `npm run deploy:cloudflare`
+- Root directory / Path: repository root (`Path` 입력란은 비워 둠)
+- Build variable: `NODE_VERSION=24`
+- Output / assets directory: `out` (`wrangler.jsonc`의 `./out`)
 
-이 저장소 변경은 정적 배포 준비만 수행합니다. Cloudflare Pages 프로젝트 생성, 프로덕션 배포, 배포 자격 증명 추가, DNS 변경 및 도메인 전환은 이 작업의 범위가 아닙니다.
+초기 배포 주소는 Cloudflare가 제공하는 `*.workers.dev`를 사용합니다. custom domain 연결과 DNS cutover는 별도 검토와 명시적 승인 후 수행합니다. API token, account ID, secret 및 `.dev.vars`는 저장소에 commit하지 않습니다.
 
-`public/_headers`는 정적 호스팅에서 보수적인 보안 헤더와 해시된 Next.js 정적 자산의 장기 캐시 정책을 제공합니다. 엄격한 Content Security Policy는 생성 결과와 함께 별도로 검증하기 전까지 적용하지 않습니다.
+반드시 repository root의 committed `wrangler.jsonc`와 `npm run deploy:cloudflare`를 사용합니다. 설정 파일 없이 기본 `npx wrangler deploy`를 실행하면 Wrangler의 framework 자동 감지가 Next.js를 OpenNext SSR 앱으로 구성하고 정적 export에는 존재하지 않는 `.next/standalone`을 찾을 수 있습니다. 이 프로젝트에는 OpenNext, Worker runtime script 또는 Pages용 output 설정이 필요하지 않습니다.
+
+로컬에서는 `npm run build`, `npm run check:static`, `npm run check:cloudflare`로 assets-only bundle을 credential 없이 검증할 수 있습니다. 실제 배포 rollback은 승인된 운영 작업으로 처리하며, 배포 전에는 이 변경 commit을 revert해 기존 repository 상태로 복구할 수 있습니다. 배포 후에는 Cloudflare Workers Versions & Deployments에서 직전 검증 버전으로 rollback합니다.
+
+`public/_headers`는 빌드 시 `out/_headers`로 복사되어 보수적인 보안 헤더와 해시된 Next.js 정적 자산의 장기 immutable cache 정책을 제공합니다. 엄격한 Content Security Policy는 생성 결과와 함께 별도로 검증하기 전까지 적용하지 않습니다.
+
+이 저장소 변경은 정적 배포 준비만 수행합니다. 실제 Cloudflare production 배포, custom domain 연결, DNS 변경 및 도메인 전환은 이 작업의 범위가 아닙니다.
 
 ## OCI static Nginx fallback
 
@@ -96,4 +107,6 @@ Nginx 예시는 `out/`을 직접 제공하고, 확장자 없는 URL과 생성된
 - `npm test`: 집중 단위 테스트
 - `npm run build`: `out/` 정적 내보내기 생성
 - `npm run check:static`: 생성된 정적 결과 검증
+- `npm run check:cloudflare`: 배포 없이 Workers Static Assets bundle 검증
+- `npm run deploy:cloudflare`: 승인된 환경에서 committed Wrangler 설정으로 배포
 - `npm run preview`: 생성된 `out/` 로컬 미리보기
