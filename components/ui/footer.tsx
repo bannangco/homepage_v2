@@ -54,12 +54,20 @@ export default function Footer() {
 
         <div className="flex flex-col gap-3 pt-6 text-xs text-ivory-muted sm:flex-row sm:items-center sm:justify-between">
           <p>© Bannangco. 주식회사 반낭코</p>
-          <Link
-            href="/announcements"
-            className="inline-flex min-h-11 w-fit items-center text-ivory-muted outline-none transition-colors hover:text-ivory focus-visible:text-ivory focus-visible:ring-2 focus-visible:ring-signal focus-visible:ring-offset-2 focus-visible:ring-offset-ink motion-reduce:transition-none"
-          >
-            전자공고·법적 고지
-          </Link>
+          <div className="flex flex-wrap gap-x-5">
+            <Link
+              href="/privacy"
+              className="inline-flex min-h-11 w-fit items-center text-ivory-muted outline-none transition-colors hover:text-ivory focus-visible:text-ivory focus-visible:ring-2 focus-visible:ring-signal focus-visible:ring-offset-2 focus-visible:ring-offset-ink motion-reduce:transition-none"
+            >
+              개인정보처리방침
+            </Link>
+            <Link
+              href="/announcements"
+              className="inline-flex min-h-11 w-fit items-center text-ivory-muted outline-none transition-colors hover:text-ivory focus-visible:text-ivory focus-visible:ring-2 focus-visible:ring-signal focus-visible:ring-offset-2 focus-visible:ring-offset-ink motion-reduce:transition-none"
+            >
+              전자공고·법적 고지
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
