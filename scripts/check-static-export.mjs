@@ -12,6 +12,7 @@ import {
   ORGANIZATION_JSON_LD,
 } from "../lib/company-profile.ts";
 import { validateLegalDocuments } from "../lib/legal-document-contract.ts";
+import { PRIVACY_POLICY_FACTS } from "../lib/privacy-policy.ts";
 import {
   getPublicPdfPathSegments,
   isValidPublicPdfPath,
@@ -19,6 +20,9 @@ import {
 import {
   LEGAL_NOTICE_DESCRIPTION,
   LEGAL_NOTICE_TITLE,
+  PRIVACY_POLICY_DESCRIPTION,
+  PRIVACY_POLICY_PATH,
+  PRIVACY_POLICY_TITLE,
   SITE_URL,
 } from "../lib/site-metadata.ts";
 import {
@@ -272,8 +276,10 @@ await requireFile("404.html");
 await requireFile("robots.txt");
 await requireFile("sitemap.xml");
 await requireFile("_headers");
+await requireFile("privacy.html");
 await requireRoute("/");
 await requireRoute("/announcements");
+await requireRoute(PRIVACY_POLICY_PATH);
 
 for (const announcement of announcements) {
   await requireRoute(getAnnouncementPath(announcement.id));
@@ -338,6 +344,16 @@ function verifySharedFooter(html, relativePath) {
     return;
   }
 
+  if (
+    getVisibleDocumentText(footerElement.fragment).includes(
+      PRIVACY_POLICY_FACTS.representative,
+    )
+  ) {
+    failures.push(
+      `${relativePath} shared footer must not expose the privacy-only representative name.`,
+    );
+  }
+
   const exactLegalLinks = getLiteralStartTags(footerElement.fragment).filter(
     (startTag) =>
       startTag.tagName === "a" &&
@@ -355,6 +371,25 @@ function verifySharedFooter(html, relativePath) {
   ) {
     failures.push(
       `${relativePath} footer must contain exactly one /announcements link labelled 전자공고·법적 고지.`,
+    );
+  }
+
+  const exactPrivacyLinks = getLiteralStartTags(footerElement.fragment).filter(
+    (startTag) =>
+      startTag.tagName === "a" &&
+      getLiteralAttribute(startTag.html, "href") === PRIVACY_POLICY_PATH,
+  );
+  const privacyLinkElement =
+    exactPrivacyLinks.length === 1
+      ? getMatchingElement(footerElement.fragment, exactPrivacyLinks[0])
+      : null;
+
+  if (
+    !privacyLinkElement ||
+    textFromHtmlFragment(privacyLinkElement.fragment) !== "개인정보처리방침"
+  ) {
+    failures.push(
+      `${relativePath} footer must contain exactly one ${PRIVACY_POLICY_PATH} link labelled 개인정보처리방침.`,
     );
   }
 }
@@ -606,6 +641,7 @@ if (sitemapXml) {
   const expectedSitemapLocations = [
     SITE_URL,
     `${SITE_URL}/announcements`,
+    `${SITE_URL}${PRIVACY_POLICY_PATH}`,
     ...sortedAnnouncements.map(
       (announcement) => `${SITE_URL}${getAnnouncementPath(announcement.id)}`,
     ),
@@ -620,7 +656,11 @@ if (sitemapXml) {
     );
   }
 
-  for (const baseLocation of [SITE_URL, `${SITE_URL}/announcements`]) {
+  for (const baseLocation of [
+    SITE_URL,
+    `${SITE_URL}/announcements`,
+    `${SITE_URL}${PRIVACY_POLICY_PATH}`,
+  ]) {
     const entry = sitemapEntries.find(({ loc }) => loc === baseLocation);
     if (!entry || entry.lastmod !== "") {
       failures.push(
@@ -1035,6 +1075,57 @@ if (homepageHtml) {
     );
   }
 
+  const privacyLinkStartTags = literalStartTags.filter((startTag) => {
+    if (startTag.tagName !== "a") return false;
+
+    const href = getLiteralAttribute(startTag.html, "href");
+    const url = href === null ? null : getBannangcoUrl(href);
+    return url !== null && url.pathname === PRIVACY_POLICY_PATH;
+  });
+  const privacyLinkElement =
+    privacyLinkStartTags.length === 1
+      ? getMatchingElement(homepageHtml, privacyLinkStartTags[0])
+      : null;
+
+  if (privacyLinkStartTags.length !== 1) {
+    failures.push(
+      `out/index.html must contain exactly one link to ${PRIVACY_POLICY_PATH}.`,
+    );
+  } else if (
+    !privacyLinkElement ||
+    textFromHtmlFragment(privacyLinkElement.fragment) !== "개인정보처리방침"
+  ) {
+    failures.push(
+      "The footer privacy link must be labelled 개인정보처리방침.",
+    );
+  }
+
+  const privacyLinkOutsideFooter = privacyLinkStartTags.some((startTag) => {
+    const linkElement = getMatchingElement(homepageHtml, startTag);
+    return (
+      !footerElement ||
+      !linkElement ||
+      linkElement.start < footerElement.start ||
+      linkElement.end > footerElement.end
+    );
+  });
+
+  if (privacyLinkOutsideFooter) {
+    failures.push(
+      `Links to ${PRIVACY_POLICY_PATH} must appear only within the site footer.`,
+    );
+  }
+
+  if (
+    getVisibleDocumentText(homepageHtml).includes(
+      PRIVACY_POLICY_FACTS.representative,
+    )
+  ) {
+    failures.push(
+      "out/index.html must not expose the privacy-only representative name.",
+    );
+  }
+
   const forbiddenHomepageValues = [
     "AI operated metasearch website for Museums, Galleries, and Art in U.S. 2025.04 종료",
     "2024.12 종료",
@@ -1344,13 +1435,362 @@ if (legalHubHtml) {
   }
 }
 
+let privacyHtml = "";
+try {
+  privacyHtml = await readFile(path.join(outputRoot, "privacy.html"), "utf8");
+} catch {
+  // The required-file check above already reports a missing privacy page.
+}
+
+if (privacyHtml) {
+  const privacyStartTags = getLiteralStartTags(privacyHtml);
+  const privacyPageStartTags = privacyStartTags.filter(
+    (startTag) =>
+      getLiteralAttribute(startTag.html, "data-privacy-page") === "true",
+  );
+  const privacyPageElement =
+    privacyPageStartTags.length === 1
+      ? getMatchingElement(privacyHtml, privacyPageStartTags[0])
+      : null;
+
+  if (!privacyPageElement) {
+    failures.push(
+      "out/privacy.html must contain exactly one inspectable privacy page root.",
+    );
+  } else {
+    const pageStartTags = getLiteralStartTags(privacyPageElement.fragment);
+    const pageVisibleText = getVisibleDocumentText(privacyPageElement.fragment);
+    const h1StartTags = pageStartTags.filter(
+      (startTag) => startTag.tagName === "h1",
+    );
+    const h1Element =
+      h1StartTags.length === 1
+        ? getMatchingElement(privacyPageElement.fragment, h1StartTags[0])
+        : null;
+
+    if (
+      !h1Element ||
+      getLiteralAttribute(h1StartTags[0].html, "aria-label") !==
+        "개인정보처리방침" ||
+      textFromHtmlFragment(h1Element.fragment) !== "개인정보처리방침"
+    ) {
+      failures.push(
+        "out/privacy.html must expose exactly one h1 named 개인정보처리방침.",
+      );
+    }
+
+    const expectedSections = [
+      ["privacy-overview", "개인정보처리방침 개요"],
+      ["privacy-items", "처리하는 개인정보 항목 및 수집 방법"],
+      ["privacy-purpose", "개인정보 처리 목적"],
+      ["privacy-retention", "보유 및 이용 기간"],
+      ["privacy-destruction", "파기 절차 및 방법"],
+      ["privacy-third-parties", "제3자 제공 여부"],
+      ["privacy-external-services", "외부 이메일·인프라 서비스 이용"],
+      ["privacy-overseas", "국외 처리 가능성"],
+      ["privacy-analytics", "Cloudflare Web Analytics 및 자동 수집 기술"],
+      ["privacy-rights", "정보주체의 권리와 행사 방법"],
+      ["privacy-contact", "개인정보 보호책임자 및 문의처"],
+      ["privacy-safeguards", "안전성 확보 조치"],
+      ["privacy-effective-date", "시행일"],
+    ];
+    const sectionStartTags = pageStartTags.filter(
+      (startTag) =>
+        startTag.tagName === "section" &&
+        getLiteralAttribute(startTag.html, "data-privacy-section") !== null,
+    );
+    const actualSectionIds = sectionStartTags.map((startTag) =>
+      getLiteralAttribute(startTag.html, "data-privacy-section"),
+    );
+
+    if (
+      !stringArraysMatch(
+        actualSectionIds,
+        expectedSections.map(([id]) => id),
+      )
+    ) {
+      failures.push(
+        "out/privacy.html must render the thirteen privacy sections in the approved order.",
+      );
+    }
+
+    for (const [id, title] of expectedSections) {
+      const matchingSections = sectionStartTags.filter(
+        (startTag) =>
+          getLiteralAttribute(startTag.html, "data-privacy-section") === id &&
+          getLiteralAttribute(startTag.html, "id") === id &&
+          getLiteralAttribute(startTag.html, "aria-labelledby") === `${id}-title`,
+      );
+      const sectionElement =
+        matchingSections.length === 1
+          ? getMatchingElement(privacyPageElement.fragment, matchingSections[0])
+          : null;
+      const sectionHeadings = sectionElement
+        ? getLiteralStartTags(sectionElement.fragment).filter(
+            (startTag) =>
+              startTag.tagName === "h2" &&
+              getLiteralAttribute(startTag.html, "id") === `${id}-title`,
+          )
+        : [];
+      const sectionHeading =
+        sectionHeadings.length === 1 && sectionElement
+          ? getMatchingElement(sectionElement.fragment, sectionHeadings[0])
+          : null;
+
+      if (
+        !sectionHeading ||
+        textFromHtmlFragment(sectionHeading.fragment) !== title
+      ) {
+        failures.push(
+          `Privacy section ${id} must have its exact accessible heading: ${title}.`,
+        );
+      }
+    }
+
+    const headingLevels = pageStartTags
+      .filter((startTag) => /^h[1-6]$/.test(startTag.tagName))
+      .map((startTag) => Number(startTag.tagName.slice(1)));
+    if (
+      headingLevels[0] !== 1 ||
+      headingLevels.filter((level) => level === 1).length !== 1 ||
+      headingLevels.filter((level) => level === 2).length !==
+        expectedSections.length ||
+      headingLevels.some((level, index) =>
+        index === 0 ? false : level > headingLevels[index - 1] + 1,
+      ) ||
+      headingLevels.some((level) => level > 3) ||
+      !pageVisibleText.includes("외부 이메일 서비스") ||
+      !pageVisibleText.includes("Cloudflare 제공 인프라")
+    ) {
+      failures.push(
+        "out/privacy.html must use one h1 with logical h2 policy sections and no skipped heading levels.",
+      );
+    }
+
+    const requiredPrivacyText = [
+      PRIVACY_POLICY_FACTS.controller,
+      PRIVACY_POLICY_FACTS.representative,
+      PRIVACY_POLICY_FACTS.privacyOfficer,
+      PRIVACY_POLICY_FACTS.contactEmail,
+      "일반 무료 Gmail",
+      "Google LLC",
+      "외부 이메일 서비스",
+      "자발적으로 제공",
+      "모든 항목이 항상 필수인 것은 아닙니다",
+      "웹사이트 자체가 문의 양식을 통해 이 정보를 수집하지 않습니다",
+      "문의의 접수와 식별",
+      "문의 이력 유지와 분쟁 처리",
+      "내부 최장 보유 한도",
+      "법정 의무 기간",
+      "마지막 연락일",
+      "더 일찍 삭제",
+      "부당한 지체 없이",
+      "Cloudflare Workers Static Assets",
+      "Cloudflare Web Analytics",
+      "페이지 경로",
+      "페이지 로드 식별자",
+      "Web Vitals",
+      "localStorage",
+      "sessionStorage",
+      "IndexedDB",
+      "접속 IP 주소",
+      "핵심 데이터베이스나 로그에는 저장되지 않습니다",
+      `${PRIVACY_POLICY_FACTS.cloudflare.unsampledRetentionDays}일`,
+      `약 ${PRIVACY_POLICY_FACTS.cloudflare.longTermAggregatePercentage}%`,
+      `${PRIVACY_POLICY_FACTS.cloudflare.accessibleHistoryMonths}개월`,
+      "별도의 analytics beacon을 직접 추가하지 않습니다",
+      "별도의 쿠키 배너나 consent SDK를 추가하지 않습니다",
+    ];
+    for (const requiredText of requiredPrivacyText) {
+      if (!pageVisibleText.includes(requiredText)) {
+        failures.push(
+          `out/privacy.html is missing an approved disclosure: ${requiredText}`,
+        );
+      }
+    }
+
+    const unsupportedEnterpriseService = ["Google", "Workspace"].join(" ");
+    if (pageVisibleText.includes(unsupportedEnterpriseService)) {
+      failures.push(
+        "out/privacy.html must identify the email service as ordinary free Gmail only.",
+      );
+    }
+
+    const privacyLinks = pageStartTags.filter(
+      (startTag) => startTag.tagName === "a",
+    );
+    const exactMailtoLinks = privacyLinks.filter(
+      (startTag) =>
+        getLiteralAttribute(startTag.html, "href") ===
+        `mailto:${PRIVACY_POLICY_FACTS.contactEmail}`,
+    );
+    const contactSectionStartTag = sectionStartTags.find(
+      (startTag) =>
+        getLiteralAttribute(startTag.html, "data-privacy-section") ===
+        "privacy-contact",
+    );
+    const contactSectionElement = contactSectionStartTag
+      ? getMatchingElement(privacyPageElement.fragment, contactSectionStartTag)
+      : null;
+    const contactVisibleText = getVisibleDocumentText(
+      contactSectionElement?.fragment ?? "",
+    );
+    const contactMailtoLinks = contactSectionElement
+      ? getLiteralStartTags(contactSectionElement.fragment).filter(
+          (startTag) =>
+            startTag.tagName === "a" &&
+            getLiteralAttribute(startTag.html, "href") ===
+              `mailto:${PRIVACY_POLICY_FACTS.contactEmail}`,
+        )
+      : [];
+    if (
+      exactMailtoLinks.length !== 1 ||
+      contactMailtoLinks.length !== 1 ||
+      !contactVisibleText.includes("개인정보 보호책임자") ||
+      !contactVisibleText.includes(PRIVACY_POLICY_FACTS.privacyOfficer) ||
+      !contactVisibleText.includes(PRIVACY_POLICY_FACTS.contactEmail)
+    ) {
+      failures.push(
+        "out/privacy.html must bind the exact officer and accessible email link to its privacy-contact section.",
+      );
+    }
+
+    for (const href of [
+      PRIVACY_POLICY_FACTS.emailService.privacyPolicyUrl,
+      PRIVACY_POLICY_FACTS.cloudflare.rumBeaconUrl,
+      PRIVACY_POLICY_FACTS.cloudflare.webAnalyticsFaqUrl,
+      PRIVACY_POLICY_FACTS.cloudflare.customerDpaUrl,
+    ]) {
+      const matches = privacyLinks.filter(
+        (startTag) => getLiteralAttribute(startTag.html, "href") === href,
+      );
+      if (matches.length !== 1) {
+        failures.push(
+          `out/privacy.html must link exactly once to its authoritative reference: ${href}`,
+        );
+      }
+    }
+
+    const timeStartTags = pageStartTags.filter(
+      (startTag) => startTag.tagName === "time",
+    );
+    if (
+      timeStartTags.length === 0 ||
+      timeStartTags.some(
+        (startTag) =>
+          getLiteralAttribute(startTag.html, "datetime") !==
+          PRIVACY_POLICY_FACTS.effectiveDate,
+      )
+    ) {
+      failures.push(
+        "out/privacy.html must derive every displayed policy date from the approved effective date.",
+      );
+    }
+
+    const visibleCalendarDates = new Set(
+      pageVisibleText.match(/\b20\d{2}[.-]\d{2}[.-]\d{2}\b/g) ?? [],
+    );
+    if (
+      !stringArraysMatch(
+        [...visibleCalendarDates],
+        [PRIVACY_POLICY_FACTS.effectiveDate.replaceAll("-", ".")],
+      )
+    ) {
+      failures.push(
+        "out/privacy.html must not display an unapproved or invented calendar date.",
+      );
+    }
+
+    if (/<form\b/i.test(privacyPageElement.fragment)) {
+      failures.push("out/privacy.html must not render a contact form.");
+    }
+    if (
+      /data-cf-beacon|beacon\.min\.js|<script\b[^>]*cloudflareinsights/i.test(
+        privacyPageElement.fragment,
+      )
+    ) {
+      failures.push(
+        "out/privacy.html must not insert an application-owned analytics beacon.",
+      );
+    }
+    if (
+      /\b01[016789][-. ]?\d{3,4}[-. ]?\d{4}\b|\b\d{3}-\d{2}-\d{5}\b|\b\d{6}-\d{7}\b/.test(
+        pageVisibleText,
+      )
+    ) {
+      failures.push(
+        "out/privacy.html must not expose a telephone number or personal identifier.",
+      );
+    }
+  }
+
+  const renderedTitle = textFromHtmlFragment(
+    /<title>([\s\S]*?)<\/title>/i.exec(privacyHtml)?.[1] ?? "",
+  );
+  if (renderedTitle !== PRIVACY_POLICY_TITLE) {
+    failures.push(`out/privacy.html must have the exact title ${PRIVACY_POLICY_TITLE}.`);
+  }
+
+  const descriptions = getMetaContents(
+    privacyStartTags,
+    "name",
+    "description",
+  );
+  if (
+    descriptions.length !== 1 ||
+    descriptions[0] !== PRIVACY_POLICY_DESCRIPTION
+  ) {
+    failures.push("out/privacy.html must contain its exact Korean description.");
+  }
+
+  const canonicalLinks = privacyStartTags.filter(
+    (startTag) =>
+      startTag.tagName === "link" &&
+      getLiteralAttribute(startTag.html, "rel") === "canonical" &&
+      getLiteralAttribute(startTag.html, "href") ===
+        `${SITE_URL}${PRIVACY_POLICY_PATH}`,
+  );
+  if (canonicalLinks.length !== 1) {
+    failures.push(
+      `out/privacy.html must contain exactly one canonical link to ${SITE_URL}${PRIVACY_POLICY_PATH}.`,
+    );
+  }
+
+  for (const [attribute, name, expectedContent] of [
+    ["property", "og:title", PRIVACY_POLICY_TITLE],
+    ["property", "og:description", PRIVACY_POLICY_DESCRIPTION],
+    ["property", "og:url", `${SITE_URL}${PRIVACY_POLICY_PATH}`],
+    ["property", "og:image", `${SITE_URL}/images/ogimage.png`],
+    ["name", "twitter:title", PRIVACY_POLICY_TITLE],
+    ["name", "twitter:description", PRIVACY_POLICY_DESCRIPTION],
+  ]) {
+    const contents = getMetaContents(privacyStartTags, attribute, name);
+    if (contents.length !== 1 || contents[0] !== expectedContent) {
+      failures.push(`out/privacy.html must contain exact ${name} metadata.`);
+    }
+  }
+}
+
 const renderedPdfHrefs = new Set();
 
 for (const htmlFile of htmlFiles) {
   const html = await readFile(htmlFile, "utf8");
   const relativePath = path.relative(projectRoot, htmlFile).replaceAll(path.sep, "/");
+  const literalStartTags = getLiteralStartTags(html);
 
   verifySharedFooter(html, relativePath);
+
+  const mainCount = literalStartTags.filter(
+    (startTag) => startTag.tagName === "main",
+  ).length;
+  const h1Count = literalStartTags.filter(
+    (startTag) => startTag.tagName === "h1",
+  ).length;
+  if (mainCount !== 1 || h1Count !== 1) {
+    failures.push(
+      `${relativePath} must contain exactly one main and one h1 (received main=${mainCount}, h1=${h1Count}).`,
+    );
+  }
 
   if (getJsonLdScriptContents(html).length !== 1) {
     failures.push(
@@ -1370,7 +1810,65 @@ for (const htmlFile of htmlFiles) {
     failures.push(`${relativePath} references the removed /announcements/1 placeholder`);
   }
 
-  for (const startTag of getLiteralStartTags(html)) {
+  for (const startTag of literalStartTags) {
+    const directRequestAttribute = [
+      "script",
+      "img",
+      "iframe",
+      "source",
+      "audio",
+      "video",
+    ].includes(startTag.tagName)
+      ? "src"
+      : null;
+    const directRequestUrl = directRequestAttribute
+      ? getLiteralAttribute(startTag.html, directRequestAttribute)
+      : null;
+
+    if (directRequestUrl && /^(?:https?:)?\/\//i.test(directRequestUrl)) {
+      failures.push(
+        `${relativePath} contains an external runtime resource request: ${directRequestUrl}`,
+      );
+    }
+
+    if (startTag.tagName === "link") {
+      const relTokens = new Set(
+        (getLiteralAttribute(startTag.html, "rel") ?? "")
+          .toLowerCase()
+          .split(/\s+/),
+      );
+      const href = getLiteralAttribute(startTag.html, "href");
+      const requestRels = [
+        "stylesheet",
+        "preload",
+        "modulepreload",
+        "prefetch",
+        "icon",
+        "manifest",
+      ];
+      if (
+        href &&
+        /^(?:https?:)?\/\//i.test(href) &&
+        requestRels.some((rel) => relTokens.has(rel))
+      ) {
+        failures.push(
+          `${relativePath} contains an external runtime link resource: ${href}`,
+        );
+      }
+    }
+  }
+
+  for (const srcset of html.matchAll(/\bsrcset=["']([^"']+)["']/gi)) {
+    if (
+      srcset[1]
+        .split(",")
+        .some((candidate) => /^(?:https?:)?\/\//i.test(candidate.trim()))
+    ) {
+      failures.push(`${relativePath} contains an external runtime srcset.`);
+    }
+  }
+
+  for (const startTag of literalStartTags) {
     if (startTag.tagName !== "a") continue;
 
     const href = getLiteralAttribute(startTag.html, "href");

@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 import { getAnnouncementPath } from "@/lib/announcement-contract";
 import { getAnnouncements } from "@/lib/announcements";
-import { SITE_URL } from "@/lib/site-metadata";
+import { PRIVACY_POLICY_PATH, SITE_URL } from "@/lib/site-metadata";
 
 export const dynamic = "force-static";
 
@@ -17,6 +17,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${SITE_URL}/announcements`,
       changeFrequency: "weekly",
       priority: 0.6,
+    },
+    {
+      url: `${SITE_URL}${PRIVACY_POLICY_PATH}`,
+      changeFrequency: "yearly",
+      priority: 0.5,
     },
   ];
 

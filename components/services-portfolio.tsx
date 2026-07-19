@@ -141,7 +141,7 @@ export default function ServicesPortfolio() {
                       {service.description}
                     </p>
                   </div>
-                  <p className="mt-6 max-w-lg text-sm leading-6 text-ivory/50">
+                  <p className="mt-6 max-w-lg break-keep text-sm leading-6 text-ivory/50 [overflow-wrap:normal]">
                     출시를 준비하는 단계로, 공개 운영 이력과 외부 링크는
                     아직 없습니다.
                   </p>
