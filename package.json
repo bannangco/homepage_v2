@@ -10,10 +10,11 @@
     "lint": "eslint . --max-warnings=0",
     "typegen": "next typegen",
     "typecheck": "npm run typegen && tsc --noEmit",
-    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/date-only.test.mjs tests/announcement-contract.test.mjs tests/service-catalog.test.mjs tests/cloudflare-deployment.test.mjs tests/privacy-policy.test.mjs",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test tests/date-only.test.mjs tests/announcement-contract.test.mjs tests/service-catalog.test.mjs tests/cloudflare-deployment.test.mjs tests/privacy-policy.test.mjs tests/production-assurance.test.mjs",
     "build": "next build",
     "check:static": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-static-export.mjs",
     "check:cloudflare": "wrangler deploy --dry-run",
+    "check:production": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-production.mjs",
     "deploy:cloudflare": "wrangler deploy",
     "preview": "serve out"
   },

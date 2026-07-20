@@ -38,6 +38,8 @@ npm audit
 
 `npm run build`는 배포 가능한 정적 파일을 `out/`에 생성합니다. `npm run check:static`은 필수 경로와 정적 출력의 안전 조건을 확인합니다.
 
+운영 사이트의 읽기 전용 검사는 `https://bannangco.com`에 고정된 `npm run check:production`으로 실행합니다. 상세 절차는 [production operations runbook](docs/production-operations.md), 정기·수동 모니터링 정의는 [Production Smoke workflow](.github/workflows/production-smoke.yml)를 참고합니다.
+
 빌드 결과물을 로컬에서 미리 보려면 다음을 실행합니다.
 
 ```bash
@@ -131,5 +133,6 @@ Nginx 예시는 `out/`을 직접 제공하고, 확장자 없는 URL과 생성된
 - `npm run build`: `out/` 정적 내보내기 생성
 - `npm run check:static`: 생성된 정적 결과 검증
 - `npm run check:cloudflare`: 배포 없이 Workers Static Assets bundle 검증
+- `npm run check:production`: 운영 사이트의 읽기 전용 smoke 검사
 - `npm run deploy:cloudflare`: 승인된 환경에서 committed Wrangler 설정으로 배포
 - `npm run preview`: 생성된 `out/` 로컬 미리보기
