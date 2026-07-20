@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
@@ -22,6 +23,9 @@ import {
 import { PRIVACY_POLICY_FACTS } from "../lib/privacy-policy.ts";
 
 const projectRoot = fileURLToPath(new URL("../", import.meta.url));
+const productionScript = fileURLToPath(
+  new URL("../scripts/check-production.mjs", import.meta.url),
+);
 const SECURITY_HEADERS = {
   "x-content-type-options": "nosniff",
   "x-frame-options": "SAMEORIGIN",
@@ -36,6 +40,22 @@ function normalizedResponse(status, body = "", headers = {}) {
     headers: new Headers({ ...SECURITY_HEADERS, ...headers }),
     attempts: 1,
   };
+}
+
+function runProductionCli(args, environment = {}) {
+  return spawnSync(
+    process.execPath,
+    [
+      "--disable-warning=MODULE_TYPELESS_PACKAGE_JSON",
+      productionScript,
+      ...args,
+    ],
+    {
+      encoding: "utf8",
+      env: { ...process.env, ...environment },
+      timeout: 5_000,
+    },
+  );
 }
 
 function pageHtml(route, { privacy = false, unsafeScript = false } = {}) {
@@ -166,29 +186,93 @@ test("accepts only origin-only public HTTP(S) base URLs", () => {
   }
 });
 
-test("parses a single CLI or environment base override without echoing credentials", () => {
+test("pins the production CLI parser to the approved apex", () => {
+  const retiredEnvironmentName = [
+    "BANNANGCO",
+    "PRODUCTION",
+    "BASE",
+    "URL",
+  ].join("_");
+  const environmentWithRetiredOverride = {
+    [retiredEnvironmentName]: "https://example.com",
+  };
+
+  assert.equal(parseCliOptions([]).baseUrl.href, "https://bannangco.com/");
+  assert.equal(parseCliOptions(["--help"]).help, true);
+  assert.equal(parseCliOptions(["-h"]).help, true);
   assert.equal(
-    parseCliOptions(["--base-url", "https://preview.example"], {}).baseUrl.href,
-    "https://preview.example/",
+    parseCliOptions([], environmentWithRetiredOverride).baseUrl.href,
+    "https://bannangco.com/",
   );
-  assert.equal(
-    parseCliOptions([], {
-      BANNANGCO_PRODUCTION_BASE_URL: "https://preview.example",
-    }).baseUrl.href,
-    "https://preview.example/",
-  );
-  assert.throws(
-    () =>
-      parseCliOptions(["--base-url=https://preview.example"], {
-        BANNANGCO_PRODUCTION_BASE_URL: "https://other.example",
-      }),
-    /either --base-url/,
-  );
-  assert.throws(() => parseCliOptions(["--unknown"], {}), /Unknown/);
-  assert.throws(
-    () => parseCliOptions(["--base-url=https://user:secret@example.com"], {}),
-    (error) => !error.message.includes("secret"),
-  );
+
+  for (const argumentsToReject of [
+    ["--base-url", "https://example.com"],
+    ["--base-url=https://user:secret@example.com"],
+    ["--unknown-sensitive-value"],
+    ["https://example.com"],
+  ]) {
+    assert.throws(
+      () => parseCliOptions(argumentsToReject),
+      (error) => {
+        assert.equal(error.message, "Unsupported production-check option.");
+        assert.equal(error.message.includes(argumentsToReject.join(" ")), false);
+        assert.equal(error.message.includes("secret"), false);
+        assert.equal(error.message.includes("example.com"), false);
+        return true;
+      },
+    );
+  }
+});
+
+test("handles help and rejected CLI options without starting assurance requests", () => {
+  const retiredEnvironmentName = [
+    "BANNANGCO",
+    "PRODUCTION",
+    "BASE",
+    "URL",
+  ].join("_");
+
+  for (const helpArgument of ["--help", "-h"]) {
+    const result = runProductionCli([helpArgument], {
+      [retiredEnvironmentName]: "https://example.com",
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /fixed production origin/);
+    assert.match(result.stdout, /https:\/\/bannangco\.com/);
+    assert.doesNotMatch(result.stdout, /example\.com/);
+    assert.equal(result.stderr, "");
+  }
+
+  for (const rejectedArguments of [
+    ["--base-url", "https://example.com"],
+    ["--base-url=https://user:secret@example.com"],
+    ["--unknown-sensitive-value"],
+  ]) {
+    const result = runProductionCli(rejectedArguments);
+    const output = `${result.stdout}${result.stderr}`;
+    assert.equal(result.status, 1);
+    assert.match(output, /Unsupported production-check option\./);
+    assert.doesNotMatch(output, /example\.com|secret|unknown-sensitive-value/);
+    assert.doesNotMatch(output, /INFO target|bounded read-only GET requests/);
+  }
+});
+
+test("does not read a runtime production-target override", async () => {
+  const retiredEnvironmentName = [
+    "BANNANGCO",
+    "PRODUCTION",
+    "BASE",
+    "URL",
+  ].join("_");
+  const [entrypoint, library] = await Promise.all([
+    readFile(productionScript, "utf8"),
+    readFile(`${projectRoot}lib/production-assurance.mjs`, "utf8"),
+  ]);
+
+  assert.doesNotMatch(entrypoint, /process\.env/);
+  assert.equal(entrypoint.includes(retiredEnvironmentName), false);
+  assert.doesNotMatch(library, /process\.env/);
+  assert.equal(library.includes(retiredEnvironmentName), false);
 });
 
 test("validates an exact one-hop permanent redirect with path and query", () => {
@@ -314,6 +398,7 @@ test("passes a complete deterministic production response map", async () => {
     nonce: "fixture",
   });
   assert.equal(report.ok, true, JSON.stringify(report.checks, null, 2));
+  assert.equal(report.baseUrl, "https://bannangco.com/");
   assert.equal(exitCodeForReport(report), 0);
   assert.equal(report.checks.some((check) => check.name === "HSTS"), true);
   assert.equal(report.checks.some((check) => check.name === "CSP"), true);

@@ -24,7 +24,7 @@ npm run check:production
 
 The check is read-only. It verifies live routes, redirects, canonical metadata, robots, sitemap URLs, privacy disclosures, security headers, hashed-asset caching, first-party assets, the custom 404, and the disabled legacy Workers URL. HSTS and CSP are reported for information only.
 
-For an explicitly approved public alternate origin, use `npm run check:production -- --base-url https://public-origin.example` or set `BANNANGCO_PRODUCTION_BASE_URL`. Supply only an HTTP(S) origin; localhost, private addresses, credentials, paths, queries, and fragments are rejected. The canonical metadata and apex redirect checks remain anchored to `https://bannangco.com`.
+The production checker is intentionally fixed to `https://bannangco.com`; it does not accept a CLI, environment, or repository-configured target override. This prevents accidental internal-network probing. A future staging domain requires a separate, source-reviewed allowlist change.
 
 After an authorized deployment, also confirm manually:
 

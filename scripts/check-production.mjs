@@ -10,12 +10,10 @@ import {
 import { PRIVACY_POLICY_FACTS } from "../lib/privacy-policy.ts";
 
 function printHelp() {
-  console.log(`Usage: npm run check:production -- [--base-url https://public.example]
+  console.log(`Usage: npm run check:production [-- --help]
 
-Runs read-only production assurance checks. The default target is
-https://bannangco.com. An alternate public origin may also be supplied through
-BANNANGCO_PRODUCTION_BASE_URL. Localhost, private addresses, credentials,
-non-HTTP(S) schemes, paths, query strings, and fragments are rejected.`);
+Runs read-only production assurance checks against the fixed production origin
+https://bannangco.com. Alternate targets are intentionally not accepted.`);
 }
 
 async function main() {
