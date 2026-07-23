@@ -58,14 +58,14 @@ test("pins Wrangler and exposes only the intended deployment commands", async ()
   const packageJson = await readJson("package.json");
   const packageLock = await readJson("package-lock.json");
 
-  assert.equal(packageJson.devDependencies.wrangler, "4.112.0");
+  assert.equal(packageJson.devDependencies.wrangler, "4.113.0");
   assert.equal(packageJson.scripts["deploy:cloudflare"], "wrangler deploy");
   assert.equal(
     packageJson.scripts["check:cloudflare"],
     "wrangler deploy --dry-run",
   );
-  assert.equal(packageLock.packages[""].devDependencies.wrangler, "4.112.0");
-  assert.equal(packageLock.packages["node_modules/wrangler"].version, "4.112.0");
+  assert.equal(packageLock.packages[""].devDependencies.wrangler, "4.113.0");
+  assert.equal(packageLock.packages["node_modules/wrangler"].version, "4.113.0");
 });
 
 test("preserves the Next static export without OpenNext configuration", async () => {

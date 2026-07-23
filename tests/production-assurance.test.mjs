@@ -458,15 +458,45 @@ test("keeps the scheduled production workflow read-only and deployment-free", as
   assert.match(workflow, /node-version-file: \.node-version/);
   assert.match(
     workflow,
-    /actions\/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0/,
+    /actions\/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1/,
   );
   assert.match(
     workflow,
-    /actions\/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e/,
+    /actions\/setup-node@820762786026740c76f36085b0efc47a31fe5020/,
   );
   assert.deepEqual(
     [...workflow.matchAll(/^\s+run:\s*(.+)$/gm)].map((match) => match[1]),
     ["npm run check:production"],
   );
   assert.doesNotMatch(workflow, /secrets\.|wrangler|deploy|npm ci|write/i);
+});
+
+test("keeps CI action pins exact and runs the accepted audit last", async () => {
+  const workflow = await readFile(
+    `${projectRoot}.github/workflows/ci.yml`,
+    "utf8",
+  );
+
+  assert.match(
+    workflow,
+    /actions\/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1/,
+  );
+  assert.match(
+    workflow,
+    /actions\/setup-node@820762786026740c76f36085b0efc47a31fe5020/,
+  );
+  assert.match(workflow, /persist-credentials: false/);
+  assert.doesNotMatch(workflow, /continue-on-error/);
+
+  const buildIndex = workflow.indexOf("- name: Build static export");
+  const staticIndex = workflow.indexOf("- name: Verify static export");
+  const cloudflareIndex = workflow.indexOf(
+    "- name: Verify Cloudflare Workers bundle",
+  );
+  const auditIndex = workflow.indexOf("- name: Audit production dependencies");
+
+  assert.notEqual(buildIndex, -1);
+  assert.equal(buildIndex < staticIndex, true);
+  assert.equal(staticIndex < cloudflareIndex, true);
+  assert.equal(cloudflareIndex < auditIndex, true);
 });
