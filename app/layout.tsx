@@ -58,7 +58,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   ...createSocialMetadata(HOME_TITLE, HOME_DESCRIPTION, SITE_URL),
   other: {
-    "naver-site-verification": "a75309cf6a38af2e26f52da0166fdf92baf2e951",
+    "naver-site-verification": "05ecf76b1747fb6d56c39f92c458d8db0ce5440c",
   },
 };
 
