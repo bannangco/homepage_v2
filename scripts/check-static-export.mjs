@@ -748,6 +748,23 @@ if (homepageHtml) {
       `out/index.html must contain exactly one canonical link to ${SITE_URL}.`,
     );
   }
+
+  const naverVerificationTags = literalStartTags.filter(
+    (startTag) =>
+      startTag.tagName === "meta" &&
+      getLiteralAttribute(startTag.html, "name") ===
+        "naver-site-verification",
+  );
+  if (
+    naverVerificationTags.length !== 1 ||
+    getLiteralAttribute(naverVerificationTags[0]?.html ?? "", "content") !==
+      "05ecf76b1747fb6d56c39f92c458d8db0ce5440c"
+  ) {
+    failures.push(
+      "out/index.html must contain the exact Naver site-verification metadata once.",
+    );
+  }
+
   const requiredSectionIds = [
     "company",
     "about",
